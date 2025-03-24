@@ -1,0 +1,12 @@
+[server]
+# Don't hardcode the port here - will be set via command line args
+headless = true
+enableCORS = false
+enableXsrfProtection = false
+
+
+[browser]
+gatherUsageStats = false
+
+[global]
+disableWatchdogWarning = true

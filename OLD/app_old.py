@@ -1,27 +1,8 @@
-# ------ Added Healthcheck code 
 import streamlit as st
 import os
-import time
 from PIL import Image
 from datetime import datetime
 import io
-
-# Setup page config
-st.set_page_config(
-    page_title="Hive Tracker",
-    page_icon="🐝",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
-# Get PORT from environment variable for Cloud Run compatibility
-PORT = int(os.environ.get("PORT", 8501))  # Default to 8501 for local development
-
-# Inform about which port we're using
-print(f"Application configured to use PORT: {PORT}")
-
-
-# ------
 
 # Import modules
 from api_services import get_weather_open_meteo, BeeVisionAnalyzer
@@ -31,24 +12,24 @@ from utils import (
 )
 from data_io import DataManager
 from ui_components import (
-    display_color_palette, display_image_preview,
+    setup_page_config, display_color_palette, display_image_preview,
     display_exif_data, display_annotation_form, display_location_input,
-    display_weather_data, display_vision_analysis, display_entry_browser
+    display_weather_data, display_vision_analysis, display_entry_browser  # Add this import
 )
+import os
 
 # Constants
 DEFAULT_IMAGE = "default_beepic.jpg"
 
-# Set Google Cloud credentials - you should store this in an environment variable
-# or use a .env file in production
-# os.environ["GOOGLE_APPLICATION_CREDENTIALS"] =   # ".streamlit/key.json"
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/Users/barbaraihidalgo-sotelo//PROJECTS/gen-lang-client-0846443908-27b15751bbd1.json"
+
+print(os.environ["GOOGLE_APPLICATION_CREDENTIALS"])
 
 # Initialize data manager
 data_manager = DataManager()
 
 # Initialize session state variables
 def init_session_state():
-    """Initialize all required session state variables."""
     if "exif_data" not in st.session_state:
         st.session_state.exif_data = {}
     if "palette_hex" not in st.session_state:
@@ -59,10 +40,6 @@ def init_session_state():
         st.session_state.lat = None
     if "lon" not in st.session_state:
         st.session_state.lon = None
-    if "vision_analysis" not in st.session_state:
-        st.session_state.vision_analysis = {}
-    if "active_image_source" not in st.session_state:
-        st.session_state.active_image_source = "default"
 
 def process_image(img_file, img_name):
     """
@@ -177,6 +154,7 @@ def get_weather_data():
     except Exception as e:
         st.error(f"Error retrieving weather data: {e}")
         return st.session_state.weather_info
+    
 
 def analyze_image_vision():
     """
@@ -235,31 +213,14 @@ def analyze_image_vision():
         st.error(f"Error analyzing image with Vision API: {e}")
         st.code(error_details)
         return None
+        
 
 def main():
-
+    # Setup page config
+    setup_page_config()
+    
     # Initialize session state
     init_session_state()
-    
-    # Add custom CSS
-    st.markdown("""
-        <style>
-        .card-container {
-            border: 2px solid white;
-            padding: 1em;
-            border-radius: 10px;
-            margin-bottom: 2em;
-        }
-        hr.custom-line {
-            border: none;
-            height: 1px;
-            background-color: #ddd;
-            margin: 1em 0;
-        }
-        </style>
-    """, unsafe_allow_html=True)
-
-    
     
     # Debug mode in sidebar
     st.sidebar.header("🔍 Session State Viewer (Debug Mode)")
@@ -269,6 +230,7 @@ def main():
     # Main content
     st.title("🐝 Hive Photo Metadata Tracker")
     
+    # Add this to app.py's main function, before the file uploader section
     # Add a toggle button for the entry browser
     show_browser = st.checkbox("📚 Browse Saved Entries", value=False)
 
@@ -281,6 +243,7 @@ def main():
                                             current_filename=st.session_state.get('filename'))
         
         # If an entry was selected, load it
+        # Add this to the app.py file inside the if selected_entry: block
         if selected_entry:
             st.info(f"Loading entry: {selected_entry}")
             
@@ -288,6 +251,9 @@ def main():
             entry_data = data_manager.load_entry(selected_entry)
             
             if entry_data:
+                st.write("Entry data loaded successfully. Contents:")
+                st.write(entry_data)  # For debugging
+                
                 # Update session state with loaded data
                 st.session_state.update({
                     "filename": entry_data.get("filename"),
@@ -317,67 +283,30 @@ def main():
                     "vision_analysis": entry_data.get("vision_analysis", {})
                 })
                 
+                st.write("Session state updated. New values:")
+                st.write({k: str(v) for k, v in st.session_state.items()})  # For debugging
+                
                 # Need to load the image from file
-                image_found = False
-                # Check current directory
                 if os.path.exists(selected_entry):
-                    image_found = True
                     temp_filename = selected_entry
-                # Check other common locations
-                elif os.path.exists(os.path.join("uploads", selected_entry)):
-                    image_found = True
-                    temp_filename = os.path.join("uploads", selected_entry)
-                # Check if it's in the temp directory
-                elif os.path.exists(f"temp_{selected_entry}"):
-                    image_found = True
-                    temp_filename = f"temp_{selected_entry}"
-
-                if image_found:
                     st.session_state.temp_filename = temp_filename
-                    st.session_state.active_image_source = "loaded"  # Mark as loaded entry
-                    st.success(f"Image file found at: {temp_filename}. Loading preview...")
+                    st.success(f"Image file found. Reloading app...")
                     st.rerun()
                 else:
                     st.warning(f"Image file not found: {selected_entry}. Metadata loaded without image.")
-                    # Still keep the loaded data without an image
-                    st.session_state.active_image_source = "loaded"
-                    st.session_state.temp_filename = None
             else:
                 st.error(f"Could not load entry data for: {selected_entry}")
 
-    # Show current image source status
-    if st.session_state.active_image_source == "default":
-        st.info("📷 Viewing default example image")
-    elif st.session_state.active_image_source == "uploaded":
-        st.success(f"📷 Viewing your uploaded image: {st.session_state.get('filename', '')}")
-    elif st.session_state.active_image_source == "loaded":
-        st.success(f"📷 Viewing saved entry: {st.session_state.get('filename', 'Unknown')}")
+    # File uploader
+    img_file = DEFAULT_IMAGE
+    img_name = os.path.basename(img_file)
     
-    # File uploader with reset option
-    col1, col2 = st.columns([4, 1])
-    with col1:
-        uploaded_file = st.file_uploader("Choose a hive image", type=["jpg", "jpeg", "png"], 
-                                       label_visibility="collapsed")
-    with col2:
-        if st.button("Reset View", key="reset_btn"):
-            # Clear the relevant session state
-            for key in ["filename", "exif_data", "date_taken", "camera_model", 
-                        "palette_hex", "vision_analysis"]:
-                if key in st.session_state:
-                    if key == "exif_data" or key == "vision_analysis":
-                        st.session_state[key] = {}
-                    elif key == "palette_hex":
-                        st.session_state[key] = []
-                    else:
-                        st.session_state[key] = None
-            # Reset to default image
-            st.session_state.active_image_source = "default"
-            st.session_state.temp_filename = DEFAULT_IMAGE
-            st.rerun()
-            
-    # Handle file selection based on active image source
+    if os.path.exists(DEFAULT_IMAGE):
+        uploaded_file = st.file_uploader("Choose a hive image", type=["jpg", "jpeg", "png"], label_visibility="collapsed")
+    else:
+        uploaded_file = st.file_uploader("Choose a hive image", type=["jpg", "jpeg", "png"])
+        
     if uploaded_file:
-        # Process uploaded file
         img_file = uploaded_file
         img_name = uploaded_file.name
         temp_filename = f"temp_{uploaded_file.name}"
@@ -385,135 +314,105 @@ def main():
             f.write(uploaded_file.getbuffer())
         # Store temp filename in session state for vision API
         st.session_state.temp_filename = temp_filename
-        st.session_state.active_image_source = "uploaded"
-        # Process the new image
-        process_image(temp_filename, img_name)
-    elif st.session_state.active_image_source == "loaded" and st.session_state.get("temp_filename"):
-        # Use the loaded entry's image
-        temp_filename = st.session_state.temp_filename
-        img_name = st.session_state.get("filename", os.path.basename(temp_filename) if temp_filename else "Unknown")
     else:
-        # Use default image
-        temp_filename = DEFAULT_IMAGE
-        img_name = os.path.basename(DEFAULT_IMAGE)
+        temp_filename = img_file
         st.session_state.temp_filename = temp_filename
-        st.session_state.active_image_source = "default"
-        # Make sure we process the default image if needed
-        if "filename" not in st.session_state or st.session_state.filename != img_name:
-            process_image(temp_filename, img_name)
     
-    # Only show the image and metadata if we have a valid file
-    if temp_filename and os.path.exists(temp_filename):
-        # Display image preview
-        img = Image.open(temp_filename)
-        sidebar_col = display_image_preview(img, img_name)
-        
-        # Display color palette in sidebar
-        with sidebar_col:
-            display_color_palette(st.session_state.palette_hex)
-            
-            st.markdown("<hr class='custom-line'>", unsafe_allow_html=True)
-            st.markdown("**🤖 Semantic Metadata**")
-            if st.session_state.get('vision_analysis') and st.session_state['vision_analysis'].get('labels'):
-                labels = st.session_state['vision_analysis'].get('labels', [])
-                bee_labels = [l for l in labels if l.get('bee_related', False)]
-                
-                if bee_labels:
-                    st.markdown("**Bee-Related Labels:**")
-                    for label in bee_labels[:3]:
-                        st.text(f"• {label.get('description', 'Unknown')}")
-                else:
-                    st.text("No bee-related labels detected")
-            else:
-                st.text("Labels: ...")
-                st.text("Objects: ...")
-                st.text("Confidence: ...")
-                st.text("Extracted Colors: ...")
-        
-        # Metadata section
-        st.markdown("<hr class='custom-line'>", unsafe_allow_html=True)
-        st.markdown("### 🧾 Photo Metadata")
-        col1, col2, col3 = st.columns(3)
+    # Process image if it's new or not processed yet
+    if "filename" not in st.session_state or st.session_state.filename != img_name:
+        process_image(temp_filename, img_name)
+    
+    # Display image preview
+    img = Image.open(temp_filename)
+    sidebar_col = display_image_preview(img, img_name)
+    
+    # Display color palette in sidebar
+    with sidebar_col:
+        display_color_palette(st.session_state.palette_hex)
         
         st.markdown("<hr class='custom-line'>", unsafe_allow_html=True)
-        
-        # EXIF data
-        with col1:
-            display_exif_data(
-                st.session_state.exif_data, 
-                st.session_state.date_taken, 
-                st.session_state.date_source, 
-                st.session_state.camera_model, 
-                st.session_state.image_resolution
-            )
-        
-        # Annotations
-        with col2:
-            notes, hive_state = display_annotation_form()
-        
-        # Weather data
-        with col3:
-            # No longer wrapped in an expander since display_weather_data handles its own layout
-            get_weather = display_weather_data(st.session_state.weather_info)
-            if get_weather:
-                st.session_state.weather_info = get_weather_data()
-                st.rerun()
-        
-        # ---- 
-        st.markdown("### 🤖 Computer Vision Analysis")
-        run_vision = display_vision_analysis(st.session_state.get('vision_analysis', {}))
-        if run_vision:
-            analyze_image_vision()
+        st.markdown("**🤖 Semantic Metadata**")
+        st.text("Labels: ...")
+        st.text("Objects: ...")
+        st.text("Confidence: ...")
+        st.text("Extracted Colors: ...")
+    
+    # Metadata section
+    st.markdown("<hr class='custom-line'>", unsafe_allow_html=True)
+    st.markdown("### 🧾 Photo Metadata")
+    col1, col2, col3 = st.columns(3)
+    
+    st.markdown("<hr class='custom-line'>", unsafe_allow_html=True)
+    
+    # EXIF data
+    with col1:
+        display_exif_data(
+            st.session_state.exif_data, 
+            st.session_state.date_taken, 
+            st.session_state.date_source, 
+            st.session_state.camera_model, 
+            st.session_state.image_resolution
+        )
+    
+    # Annotations
+    with col2:
+        notes, hive_state = display_annotation_form()
+    
+    # Weather data
+    with col3:
+        # No longer wrapped in an expander since display_weather_data handles its own layout
+        get_weather = display_weather_data(st.session_state.weather_info)
+        if get_weather:
+            st.session_state.weather_info = get_weather_data()
             st.rerun()
+            # st.markdown("Weather data will be implemented in the next step.")
+            # st.json(st.session_state.weather_info)
     
-        # Location input
-        lat, lon = display_location_input(st.session_state.lat, st.session_state.lon)
+    # ---- 
+    st.markdown("### 🤖 Computer Vision Analysis")
+    run_vision = display_vision_analysis(st.session_state.get('vision_analysis', {}))
+    if run_vision:
+        analyze_image_vision()
+        st.rerun()
+
+
+    # Location input
+    lat, lon = display_location_input(st.session_state.lat, st.session_state.lon)
+    
+    # If location changed, update session state
+    if lat != st.session_state.lat or lon != st.session_state.lon:
+        st.session_state.lat = lat
+        st.session_state.lon = lon
+    
+    # Save button
+    if st.button("Update Entry"):
+        # Prepare metadata entry
+        metadata_entry = {
+            "date": st.session_state.date_taken,
+            "date_source": st.session_state.date_source,
+            "filename": img_name,
+            "image_resolution": st.session_state.image_resolution,
+            "camera_model": st.session_state.camera_model,
+            "dominant_color": st.session_state.palette_hex[0],
+            **{f"palette_{i+1}": color for i, color in enumerate(st.session_state.palette_hex)},
+            **st.session_state.weather_info,
+            "hive_state": hive_state,
+            "notes": notes,
+            "gps_lat": st.session_state.lat,
+            "gps_long": st.session_state.lon,
+            "vision_analysis": st.session_state.get('vision_analysis', {})  # Add vision analysis
+        }
         
-        # If location changed, update session state
-        if lat != st.session_state.lat or lon != st.session_state.lon:
-            st.session_state.lat = lat
-            st.session_state.lon = lon
-        
-        # Save button
-        if st.button("Update Entry"):
-            # Prepare metadata entry
-            metadata_entry = {
-                "date": st.session_state.date_taken,
-                "date_source": st.session_state.date_source,
-                "filename": img_name,
-                "image_resolution": st.session_state.image_resolution,
-                "camera_model": st.session_state.camera_model,
-                "dominant_color": st.session_state.palette_hex[0] if st.session_state.palette_hex else "#FFFFFF",
-                **{f"palette_{i+1}": color for i, color in enumerate(st.session_state.palette_hex[:5])},
-                **st.session_state.weather_info,
-                "hive_state": hive_state,
-                "notes": notes,
-                "gps_lat": st.session_state.lat,
-                "gps_long": st.session_state.lon,
-                "vision_analysis": st.session_state.get('vision_analysis', {})  # Add vision analysis
-            }
-            
-            # Save metadata
-            if data_manager.save_entry(metadata_entry):
-                st.success("Metadata saved to CSV and JSON!")
-            else:
-                st.error("Failed to save metadata!")
-    else:
-        st.warning("No image available to display. Please upload an image or select a saved entry.")
+        # Save metadata
+        if data_manager.save_entry(metadata_entry):
+            st.success("Metadata saved to CSV and JSON!")
+        else:
+            st.error("Failed to save metadata!")
     
     # Clean up temporary file
-    if uploaded_file and os.path.exists(f"temp_{uploaded_file.name}"):
-        os.remove(f"temp_{uploaded_file.name}")
-
-    if st.sidebar.checkbox("Show Environment Info", False):
-        st.sidebar.write(f"Server port: {PORT}")
-        st.sidebar.write(f"Server IP: {socket.gethostbyname(socket.gethostname())}")
-        
-        # Show all environment variables
-        st.sidebar.write("Environment Variables:")
-        env_vars = {k: v for k, v in os.environ.items()}
-        st.sidebar.json(env_vars)
-
+    if uploaded_file and os.path.exists(temp_filename):
+        os.remove(temp_filename)
 
 if __name__ == "__main__":
     main()
+

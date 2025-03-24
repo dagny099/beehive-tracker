@@ -72,31 +72,6 @@ def display_location_input(default_lat=None, default_lon=None):
         
     return lat, lon
 
-def setup_page_config():
-    """Configure the Streamlit page settings."""
-    st.set_page_config(
-        page_title="Hive Photo Metadata Tracker", 
-        layout="wide", 
-        initial_sidebar_state="collapsed"
-    )
-    
-    # Add custom CSS
-    st.markdown("""
-        <style>
-        .card-container {
-            border: 2px solid white;
-            padding: 1em;
-            border-radius: 10px;
-            margin-bottom: 2em;
-        }
-        hr.custom-line {
-            border: none;
-            height: 1px;
-            background-color: #ddd;
-            margin: 1em 0;
-        }
-        </style>
-    """, unsafe_allow_html=True)
 
 def display_weather_data(weather_info):
     """
@@ -197,7 +172,7 @@ def display_vision_analysis(vision_analysis):
     Returns:
         bool: True if the user requested a new analysis
     """
-    st.markdown("### 🤖 Vision API Analysis")
+    # st.markdown("### 🤖 Vision API Analysis")
     
     if not vision_analysis or 'error' in vision_analysis:
         st.info("No vision analysis available. Click 'Analyze with Vision API' below.")
@@ -283,3 +258,78 @@ def display_vision_analysis(vision_analysis):
             return True
     
     return False
+
+# Add to ui_components.py
+def display_entry_browser(entries, current_filename=None):
+    """
+    Display a browsable list of saved entries.
+    
+    Parameters:
+        entries (list): List of entry summaries to display
+        current_filename (str): Currently loaded filename
+        
+    Returns:
+        str: Selected filename or None if no selection made
+    """
+    st.markdown("### 📚 Saved Entries")
+    
+    if not entries:
+        st.info("No saved entries found.")
+        return None
+    
+    # Display count of entries
+    st.markdown(f"**{len(entries)} entries found**")
+    
+    # Add search functionality
+    search_term = st.text_input("🔍 Search entries by filename or notes", "")
+    if search_term:
+        entries = [entry for entry in entries if 
+                  search_term.lower() in entry.get('filename', '').lower() or 
+                  search_term.lower() in entry.get('hive_state', '').lower()]
+        if not entries:
+            st.warning(f"No entries found matching '{search_term}'")
+            return None
+        st.info(f"Found {len(entries)} entries matching '{search_term}'")
+    
+    # Create a container for the entry browser
+    browser_container = st.container()
+    
+    # Display entries in a scrollable container
+    with browser_container:
+        selected_entry = None
+        
+        # Display entries as cards in a grid layout
+        cols = st.columns(3)
+        for i, entry in enumerate(entries):
+            with cols[i % 3]:
+                # Create a card-like container with better styling
+                st.markdown(f"""
+                <div style='
+                    border: 1px solid #888; 
+                    border-radius: 5px; 
+                    padding: 10px; 
+                    margin-bottom: 15px;
+                    background-color: {'#e0f0ff' if entry['filename'] == current_filename else '#f5f5f5'};
+                '>
+                    <div style='width:100%; height:15px; background-color:{entry["thumbnail"]}; 
+                         border-radius: 3px; margin-bottom: 8px;'></div>
+                    <p style='font-weight: bold; color: #333; font-size: 14px; margin: 5px 0;'>
+                        📄 {entry["filename"]}
+                    </p>
+                    <p style='color: #555; font-size: 12px; margin: 3px 0;'>
+                        📅 Date: {entry["date_taken"]}
+                    </p>
+                    <p style='color: #555; font-size: 12px; margin: 3px 0;'>
+                        🐝 Hive: {entry["hive_state"]}
+                    </p>
+                    <p style='color: #777; font-size: 11px; margin: 3px 0;'>
+                        ⏱️ Updated: {entry["last_updated"]}
+                    </p>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # Add a button to load this entry
+                if st.button(f"Load", key=f"load_{i}"):
+                    selected_entry = entry["filename"]
+    
+    return selected_entry

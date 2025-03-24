@@ -1,31 +1,50 @@
-FROM python:3.9-slim
+# Use official Python image as base
+FROM python:3.9-slim AS builder
 
+# Set up working directory
 WORKDIR /app
 
-# Install system dependencies
+# Install dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
     libffi-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first to leverage Docker cache
+# Copy and install requirements
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Second stage - clean deployment
+FROM python:3.9-slim
+
+WORKDIR /app
+
+# Copy installed packages from builder
+COPY --from=builder /usr/local/lib/python3.9/site-packages/ /usr/local/lib/python3.9/site-packages/
+COPY --from=builder /usr/local/bin/ /usr/local/bin/
+
+# Create app directories
+RUN mkdir -p /app/data /app/api_services /app/.streamlit
+
+# Copy streamlit config
+COPY .streamlit/config.toml /app/.streamlit/
+
 # Copy application code
-COPY *.py .
-COPY default_beepic.jpg .
+COPY *.py /app/
+COPY api_services/*.py /app/api_services/
+COPY default_beepic.jpg /app/
 
-# Make port available to the world outside container
-EXPOSE 8501
+# Copy service account key
+COPY key.json /app/
+ENV GOOGLE_APPLICATION_CREDENTIALS=/app/key.json
 
-# Create volume for data persistence
-VOLUME ["/app/data"]
+# Expose port
+EXPOSE 8080
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
-    STREAMLIT_SERVER_PORT=8501 \
-    STREAMLIT_SERVER_HEADLESS=true
+    STREAMLIT_SERVER_HEADLESS=true \
+    STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
 
-# Run the application
-CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+# Start Streamlit (using just a simple, direct command)
+CMD ["python", "-m", "streamlit", "run", "app.py", "--server.port=8080", "--server.address=0.0.0.0"]

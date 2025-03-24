@@ -78,7 +78,10 @@ class DataManager:
             df_new.to_csv(self.csv_file, index=False)
                 
     def _save_to_json(self, data):
-        """Save metadata to JSON file."""
+        """Save metadata to JSON file with enhanced storage of nested data."""
+        # Ensure we include all nested data structures as is
+        # Ensures proper saving of complex structures like vision_analysis
+        
         if os.path.exists(self.json_file):
             # Load existing data
             with open(self.json_file, 'r') as f:
@@ -111,3 +114,24 @@ class DataManager:
                     
         return None
     
+    # The following methods should be indented to be part of the DataManager class
+    def load_all_entries(self):
+        """Load all entries from the JSON file."""
+        if os.path.exists(self.json_file):
+            with open(self.json_file, 'r') as f:
+                return json.load(f)
+        return []
+
+    def get_entry_summaries(self):
+        """Return summaries of all entries for display in a browser/selector."""
+        entries = self.load_all_entries()
+        return [
+            {
+                'filename': entry.get('filename', 'Unknown'),
+                'date_taken': entry.get('date', 'Unknown'),
+                'hive_state': entry.get('hive_state', 'Unknown'),
+                'last_updated': entry.get('last_updated', 'Unknown'),
+                'thumbnail': entry.get('dominant_color', '#FFFFFF')
+            }
+            for entry in entries
+        ]
