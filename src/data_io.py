@@ -6,11 +6,14 @@ from datetime import datetime
 class DataManager:
     """Manager class for handling data storage operations."""
     
-    def __init__(self, csv_file="hive_color_log.csv", json_file="hive_color_log.json"):
+    def __init__(self, csv_file="data/hive_color_log.csv", json_file="data/hive_color_log.json"):
         """Initialize the DataManager with file paths."""
         self.csv_file = csv_file
         self.json_file = json_file
         
+        # Create data directory if it doesn't exist
+        os.makedirs(os.path.dirname(self.csv_file), exist_ok=True)
+                
     def save_entry(self, data):
         """Save or update a metadata entry to both CSV and JSON storage."""
         try:

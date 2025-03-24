@@ -24,24 +24,25 @@ print(f"Application configured to use PORT: {PORT}")
 # ------
 
 # Import modules
-from api_services import get_weather_open_meteo, BeeVisionAnalyzer
-from utils import (
+from src.api_services.weather import get_weather_open_meteo
+from src.api_services.vision import BeeVisionAnalyzer
+from src.utils import (
     extract_exif, extract_gps_coordinates, get_palette, 
     rgb_to_hex, get_file_creation_date, parse_exif_date
 )
-from data_io import DataManager
-from ui_components import (
+from src.data_io import DataManager
+from src.ui_components import (
     display_color_palette, display_image_preview,
     display_exif_data, display_annotation_form, display_location_input,
     display_weather_data, display_vision_analysis, display_entry_browser
 )
 
 # Constants
-DEFAULT_IMAGE = "default_beepic.jpg"
+DEFAULT_IMAGE = "assets/default_beepic.jpg"
 
 # Set Google Cloud credentials - you should store this in an environment variable
 # or use a .env file in production
-# os.environ["GOOGLE_APPLICATION_CREDENTIALS"] =   # ".streamlit/key.json"
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] =   ".streamlit/key.json"
 
 # Initialize data manager
 data_manager = DataManager()

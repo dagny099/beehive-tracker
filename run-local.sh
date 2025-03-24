@@ -1,10 +1,9 @@
 #!/bin/bash
+# Make sure we're in the project root
+cd "$(dirname "$0")"
 
-# Local development script
-# Uses port 8501 (Streamlit default) for local development
+# Set up environment variables
+export PYTHONPATH=.
 
-# Build the docker image
-docker build -t hive-tracker-local .
-
-# Run locally with PORT=8501
-docker run -p 8501:8501 -e PORT=8501 hive-tracker-local
+# Run the app
+streamlit run src/app.py

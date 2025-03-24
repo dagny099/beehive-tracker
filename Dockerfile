@@ -24,15 +24,16 @@ COPY --from=builder /usr/local/lib/python3.9/site-packages/ /usr/local/lib/pytho
 COPY --from=builder /usr/local/bin/ /usr/local/bin/
 
 # Create app directories
-RUN mkdir -p /app/data /app/api_services /app/.streamlit
+RUN mkdir -p /app/data /app/src  /app/src/api_services /app/.streamlit /app/assets
+
 
 # Copy streamlit config
 COPY .streamlit/config.toml /app/.streamlit/
 
 # Copy application code
-COPY *.py /app/
-COPY api_services/*.py /app/api_services/
-COPY default_beepic.jpg /app/
+COPY src/*.py /app/src
+COPY src/api_services/*.py /app/src/api_services/
+COPY assets/default_beepic.jpg /app/assets/
 
 # Copy service account key
 COPY key.json /app/
@@ -41,10 +42,16 @@ ENV GOOGLE_APPLICATION_CREDENTIALS=/app/key.json
 # Expose port
 EXPOSE 8080
 
+# Create volume for data persistence
+VOLUME ["/app/data"]
+
+
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app \
     STREAMLIT_SERVER_HEADLESS=true \
     STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+    GOOGLE_APPLICATION_CREDENTIALS=/app/key.json
 
 # Start Streamlit (using just a simple, direct command)
-CMD ["python", "-m", "streamlit", "run", "app.py", "--server.port=8080", "--server.address=0.0.0.0"]
+CMD ["python", "-m", "streamlit", "run", "src/app.py", "--server.port=8080", "--server.address=0.0.0.0"]
