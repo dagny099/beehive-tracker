@@ -1,29 +1,10 @@
-# ------ Added Healthcheck code 
 import streamlit as st
 import os
 import time
 from PIL import Image
 from datetime import datetime
 import io
-
-# Setup page config
-st.set_page_config(
-    page_title="Hive Tracker",
-    page_icon="🐝",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
-# Get PORT from environment variable for Cloud Run compatibility
-PORT = int(os.environ.get("PORT", 8501))  # Default to 8501 for local development
-
-# Inform about which port we're using
-print(f"Application configured to use PORT: {PORT}")
-
-
 # ------
-
-# Import modules
 from src.api_services.weather import get_weather_open_meteo
 from src.api_services.vision import BeeVisionAnalyzer
 from src.utils import (
@@ -37,8 +18,21 @@ from src.ui_components import (
     display_weather_data, display_vision_analysis, display_entry_browser
 )
 
+# Setup page config
+st.set_page_config(
+    page_title="Hive Tracker",
+    page_icon="🐝",
+    layout="wide",
+    initial_sidebar_state="collapsed",
+)
+
+# Get PORT from environment variable for Cloud Run compatibility
+PORT = int(os.environ.get("PORT", 8501))  # Default to 8501 for local development
+# print(f"Application configured to use PORT: {PORT}")
+
+
 # Constants
-DEFAULT_IMAGE = "assets/default_beepic.jpg"
+DEFAULT_IMAGE = "default_beepic.jpg"
 
 # Set Google Cloud credentials - you should store this in an environment variable
 # or use a .env file in production
@@ -260,8 +254,6 @@ def main():
         </style>
     """, unsafe_allow_html=True)
 
-    
-    
     # Debug mode in sidebar
     st.sidebar.header("🔍 Session State Viewer (Debug Mode)")
     with st.sidebar.expander("View session_state variables", expanded=False):
@@ -379,7 +371,6 @@ def main():
     # Handle file selection based on active image source
     if uploaded_file:
         # Process uploaded file
-        img_file = uploaded_file
         img_name = uploaded_file.name
         temp_filename = f"temp_{uploaded_file.name}"
         with open(temp_filename, "wb") as f:

@@ -8,5 +8,3 @@ enableXsrfProtection = false
 [browser]
 gatherUsageStats = false
 
-[global]
-disableWatchdogWarning = true

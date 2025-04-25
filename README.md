@@ -6,7 +6,7 @@ A Streamlit application that helps beekeepers analyze and organize photos of the
 
 ## 📸 Overview
 
-The Hive Photo Metadata Tracker combines beekeeping, data management, and computer vision to turn hive photos into a structured, queryable knowledge base. As both a beekeeping tool and a data management showcase, this application extracts, analyzes, and stores comprehensive metadata about your beehive photos.
+The Hive Photo Metadata Tracker combines beekeeping, data management, and computer vision to turn hive photos into a structured, queryable knowledge base. Serving as both a beekeeping insight tool and a data management tool, this application extracts, analyzes, and stores comprehensive metadata about your beehive photos.
 
 ### Features
 
@@ -39,11 +39,11 @@ The Hive Photo Metadata Tracker combines beekeeping, data management, and comput
    pip install -r requirements.txt
    ```
 
-3. Set up Google Cloud Vision API:
+3. Set up Google Cloud Vision API: 
    - Create a Google Cloud account if you don't already have one
-   - Create a new project in the Google Cloud Console
-   - Enable the Vision API for your project
-   - Create a service account with Vision API access
+   - Create a new project in the Google Cloud Console -- More detailed code example May 2025
+   - Enable the Vision API for your project -- More detailed code example May 2025
+   - Create a service account with Vision API access -- More detailed code example May 2025
    - Download the service account key (JSON file)
    - Set the environment variable:
      ```bash
