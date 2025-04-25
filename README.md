@@ -51,7 +51,7 @@ The application employs a multi-layered architecture designed for performance an
 </div>
 <div style="text-align: center; min-width: 250px;">
   <a href="docs/tech-stack-depiction-lg.png" target="_blank">
-  <img src="docs/tech-stack-depiction-thumb.png" alt="Tech Stack Diagram" style="max-width: 600px; height: auto; cursor: zoom-in; padding-left: 2em;">
+  <img src="docs/tech-stack-depiction.png" alt="Tech Stack Diagram" style="max-width: 600px; height: auto; cursor: zoom-in; padding-left: 2em;">
   </a>
 </div>
 </div>
@@ -88,14 +88,18 @@ The application employs a multi-layered architecture designed for performance an
    - Set the environment variable:  
    <code> export GOOGLE_APPLICATION_CREDENTIALS="path/to/your-credentials.json"</code>  
 
-4. Test the program to ensure things are installed properly: <code>streamlit run run_tracker.py</code>
+4. Test the program to ensure things are installed properly: 
+
+   <code>streamlit run run_tracker.py</code>
 
 5. To test the build of the Docker image:   
 
       ✅ Rebuild the docker image to reflect edits  
+
          <code>docker build -t hive-tracker-local .</code>  
 
-      ✅ To run the app, mount the `data/` directory and expose the right port 
+      ✅ To run the app, mount the `data/` directory and expose the right port
+       
          <code>docker run -p 8080:8080 -v $(pwd)/data:/app/data hive-tracker-local</code>
 
 
@@ -111,8 +115,6 @@ The application employs a multi-layered architecture designed for performance an
 <li>Add your annotations and observations</li>
 <li>Save the entry for future reference and analysis</li>
 </ol>
-<h3>Running Locally</h3>
-<code>streamlit run run_tracker.py</code>
 </div>
 <div style="text-align: center; min-width: 250px; clear: both;">
   <a href="docs/diagram_flow.png" target="_blank">

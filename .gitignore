@@ -37,3 +37,7 @@ temp_*
 !docs/*.png
 !docs/*.jpg
 !src/default_beepic.jpg
+notebooks/
+.streamlit
+tests
+src/app_draft.py
