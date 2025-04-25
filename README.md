@@ -11,7 +11,7 @@ A Streamlit application that helps beekeepers analyze and organize photos of the
 ## Project Overview
 <div style="display: flex; align-items: top; justify-content: space-between; flex-wrap: wrap;">
   <div style="flex: 1; min-width: 350px;">
-The Hive Photo Metadata Tracker is an innovative web application designed specifically for beekeepers to organize, analyze, and extract valuable insights from their hive inspection photographs. This application transforms unstructured photo collections into a structured, searchable knowledge base that enhances beekeeping management practices.
+The Hive Photo Metadata Tracker is a web app designed for beekeepers to organize, analyze, and extract insights from their hive inspection photographs. As I roll-out the features in my implementation strategy, my vision is of an app that transforms unstructured photo collections into a structured, searchable knowledge base that enhances beekeeping management practices.
 <h3> Business Value</h3>
 This solution addresses a critical need in apiculture by leveraging modern data techniques to:
 <ul>
