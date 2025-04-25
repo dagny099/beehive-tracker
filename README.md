@@ -98,11 +98,11 @@ The application employs a multi-layered architecture designed for performance an
 
       ✅ Rebuild the docker image to reflect edits  
 
-         <code>docker build -t hive-tracker-local .</code>  
+         docker build -t hive-tracker-local .
 
       ✅ To run the app, mount the `data/` directory and expose the right port
        
-         <code>docker run -p 8080:8080 -v $(pwd)/data:/app/data hive-tracker-local</code>
+         docker run -p 8080:8080 -v $(pwd)/data:/app/data hive-tracker-local
 
 
 ## 🚀 Usage

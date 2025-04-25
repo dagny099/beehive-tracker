@@ -2,9 +2,9 @@
 set -e  # Exit immediately if a command exits with a non-zero status
 
 # GCP configuration
-PROJECT_ID="gen-lang-client-0846443908"
+PROJECT_ID=$PROJECT_ID
 APP_NAME="hive-tracker"
-REGION="us-central1"
+REGION=$GCP_REGION
 
 # Build the Docker image
 echo "Building Docker image..."

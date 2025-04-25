@@ -33,6 +33,23 @@ if 'last_uploaded_file' not in st.session_state:
 if 'last_processed_url' not in st.session_state:
     st.session_state.last_processed_url = None
 
+# ------ I ADDED THIS TO SPEED UP THE TIME FOR USER TO SEE SMTHG ... UNTIL I OPTIMIZE THE IMAGE LOADING ------
+# Auto-load default image on first run
+if 'app_initialized' not in st.session_state:
+    # This is the first time the app is running in this session
+    st.session_state.app_initialized = True
+    
+    # Get the default image URL
+    default_img_url = "https://drive.google.com/uc?export=view&id=1aP-MjQ_wGG7RFyO0skn_cu7A2r7bh4iA"
+    
+    # Only process on first run, and only if no image is already loaded
+    if 'current_image' not in st.session_state or st.session_state.current_image is None:
+        with st.spinner("Loading initial image..."):
+            # Process the default image
+            success = process_url_image(default_img_url)
+            if success:
+                st.session_state.last_processed_url = default_img_url
+
 # Custom CSS for styling
 st.markdown("""
 <style>
