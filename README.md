@@ -2,13 +2,14 @@
 
 A Streamlit application that helps beekeepers analyze and organize photos of their hives with rich metadata.
 
-## Project Overview
-<div style="display: flex; align-items: top; justify-content: space-between; flex-wrap: wrap;">
 <div style="text-align: center; min-width: 250px;">
   <a href="src/default_beepic.jpg" target="_blank">
   <img src="src/default_beepic.jpg" alt="Tech Stack Diagram" style="max-width: 400px; height: auto; cursor: zoom-in; padding-left: 2em;">
   </a>
 </div>
+
+## Project Overview
+<div style="display: flex; align-items: top; justify-content: space-between; flex-wrap: wrap;">
   <div style="flex: 1; min-width: 350px;">
 The Hive Photo Metadata Tracker is an innovative web application designed specifically for beekeepers to organize, analyze, and extract valuable insights from their hive inspection photographs. This application transforms unstructured photo collections into a structured, searchable knowledge base that enhances beekeeping management practices.
 <h3> Business Value</h3>
@@ -67,16 +68,17 @@ The application employs a multi-layered architecture designed for performance an
 
 ### Setup
 
-1. Clone this repository:  
-   <code>
-   git clone https://github.com/yourusername/hive-photo-tracker.git  
-   cd hive-photo-tracker  
-   </code>
+1. Clone this repository: 
+   ```
+   git clone https://github.com/dagny099/beehive-tracker.git  
+   cd beehive-tracker  
+   ```
 
 2. Install required dependencies*
-   <code>
+   ```
    pip install -r requirements.txt  
-   </code> 
+   ```
+
 *NOTE: This project was developed using poetry for dependency management ([Poetry Cheatsheet](https://www.notion.so/New-Data-Science-Project-Starter-Kit-1c336bdda6aa818f83dbd0a6aab18439?pvs=4) coming soon!) but I initially wrote the Dockerfile to use pip with requirement, so I'll be modifying the Dockerfile.*  
 
 3. Set up Google Cloud Vision API:   
@@ -128,12 +130,9 @@ The application employs a multi-layered architecture designed for performance an
 
 ```
 hive-photo-tracker/
-├── api_services/        # API integrations
-├── data/                # Data storage
-├── app.py               # Main application
-├── data_io.py           # Data storage operations
-├── ui_components.py     # Streamlit UI elements
-├── utils.py             # Core utility functions
+├── docs/                # Documentation (in progress)
+├── src/                 # Main code directory
+├── run_tracker.py       # Entry point for the multi-pg application
 ├── requirements.txt     # Dependencies
 ├── Dockerfile           # Container definition
 └── deploy.sh            # Deployment script
