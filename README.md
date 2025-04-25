@@ -24,8 +24,8 @@ This solution addresses a critical need in apiculture by leveraging modern data 
 </ul>
 </div>
 <div style="text-align: center; min-width: 250px;">
-  <a href="default_beepic.jpg" target="_blank">
-  <img src="default_beepic.jpg" alt="Tech Stack Diagram" style="max-width: 400px; height: auto; cursor: zoom-in; padding-left: 2em;">
+  <a href="src/default_beepic.jpg" target="_blank">
+  <img src="src/default_beepic.jpg" alt="Tech Stack Diagram" style="max-width: 400px; height: auto; cursor: zoom-in; padding-left: 2em;">
   </a>
 </div>
 </div>
@@ -73,10 +73,11 @@ The application employs a multi-layered architecture designed for performance an
    cd hive-photo-tracker  
    </code>
 
-2. Install required dependencies:  
+2. Install required dependencies*
    <code>
    pip install -r requirements.txt  
    </code> 
+*NOTE: This project was developed using poetry for dependency management ([Poetry Cheatsheet](https://www.notion.so/New-Data-Science-Project-Starter-Kit-1c336bdda6aa818f83dbd0a6aab18439?pvs=4) coming soon!) but I initially wrote the Dockerfile to use pip with requirement, so I'll be modifying the Dockerfile.*  
 
 3. Set up Google Cloud Vision API:   
    - Create a Google Cloud account if you don't already have one
@@ -86,6 +87,17 @@ The application employs a multi-layered architecture designed for performance an
    - Download the service account key (JSON file)
    - Set the environment variable:  
    <code> export GOOGLE_APPLICATION_CREDENTIALS="path/to/your-credentials.json"</code>  
+
+4. Test the program to ensure things are installed properly: <code>streamlit run run_tracker.py</code>
+
+5. To test the build of the Docker image:   
+
+      ✅ Rebuild the docker image to reflect edits  
+         <code>docker build -t hive-tracker-local .</code>  
+
+      ✅ To run the app, mount the `data/` directory and expose the right port 
+         <code>docker run -p 8080:8080 -v $(pwd)/data:/app/data hive-tracker-local</code>
+
 
 ## 🚀 Usage
 ### Typical Workflow
@@ -100,17 +112,12 @@ The application employs a multi-layered architecture designed for performance an
 <li>Save the entry for future reference and analysis</li>
 </ol>
 <h3>Running Locally</h3>
-<code>streamlit run app.py</code>
+<code>streamlit run run_tracker.py</code>
 </div>
 <div style="text-align: center; min-width: 250px; clear: both;">
   <a href="docs/diagram_flow.png" target="_blank">
   <img src="docs/diagram_flow.png" alt="Tech Stack Diagram" style="max-width: 650px; height: auto; cursor: zoom-in;">
   </a>
-</div>
-<div style="align-items: center; clear: both; ">
-<h3>Running the Live Version</h3>
-You can access the deployed version at <a href="http://hivetracker.barbhs.com">hivetracker.barbhs.com</a>
-<br>
 </div>
 </div>
 
@@ -132,13 +139,16 @@ hive-photo-tracker/
 
 ## 🚢 Deployment
 
-This application can be deployed to Google Cloud Run using Docker:
+My app is deployed to Google Cloud Run using Docker (which hasn't been migrated to use poetry yet):
 
 1. Update the `PROJECT_ID` in `deploy.sh` with your GCP project ID  
 2. Make the deploy script executable:    
    <code>chmod +x deploy.sh </code>
 3. Run the deployment script:   
    <code>./deploy.sh</code>
+
+You can access the current live version at <a href="http://hivetracker.barbhs.com" target="_blank">hivetracker.barbhs.com</a>
+
 
 ## 🔍 Implementation Strategy
 The development approach prioritizes rapid iteration and user-centered design:

@@ -24,19 +24,21 @@ COPY --from=builder /usr/local/lib/python3.9/site-packages/ /usr/local/lib/pytho
 COPY --from=builder /usr/local/bin/ /usr/local/bin/
 
 # Create app directories
-RUN mkdir -p /app/data /app/src  /app/src/api_services /app/.streamlit /app/assets
+RUN mkdir -p /app/data /app/.streamlit /app/src
 
+# Copy streamlit config if it exists
+COPY .streamlit/config.toml /app/.streamlit/ 
 
-# Copy streamlit config
-COPY .streamlit/config.toml /app/.streamlit/
-
-# Copy application code
-COPY src/*.py /app/src
-COPY src/api_services/*.py /app/src/api_services/
-COPY assets/default_beepic.jpg /app/assets/
+# Copy application code 
+COPY run_tracker.py /app/
+COPY src/login.py /app/src/
+COPY src/calendar.py /app/src/
+COPY src/app.py /app/src/
+COPY src/timeline_component.py /app/src/
+COPY src/default_beepic.jpg /app/src/ 
 
 # Copy service account key
-COPY key.json /app/
+COPY .streamlit/key.json /app/
 ENV GOOGLE_APPLICATION_CREDENTIALS=/app/key.json
 
 # Expose port
@@ -45,13 +47,11 @@ EXPOSE 8080
 # Create volume for data persistence
 VOLUME ["/app/data"]
 
-
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app \
     STREAMLIT_SERVER_HEADLESS=true \
     STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
-    GOOGLE_APPLICATION_CREDENTIALS=/app/key.json
 
-# Start Streamlit (using just a simple, direct command)
-CMD ["python", "-m", "streamlit", "run", "src/app.py", "--server.port=8080", "--server.address=0.0.0.0"]
+# Start Streamlit
+CMD ["streamlit", "run", "run_tracker.py", "--server.port=8080", "--server.address=0.0.0.0"]

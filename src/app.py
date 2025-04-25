@@ -9,7 +9,7 @@ import pandas as pd
 import plotly.graph_objects as go
 
 # Import the timeline component module
-from timeline_component import (
+from src.timeline_component import (
     initialize_session_state, 
     render_timeline, 
     process_url_image, 

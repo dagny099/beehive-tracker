@@ -32,3 +32,8 @@ temp_*
 *.png
 *.heic
 .env
+
+# Include diagrams inside the docs/ folder
+!docs/*.png
+!docs/*.jpg
+!src/default_beepic.jpg
