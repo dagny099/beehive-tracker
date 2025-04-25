@@ -2,21 +2,60 @@
 
 A Streamlit application that helps beekeepers analyze and organize photos of their hives with rich metadata.
 
-![Beehive Image](default_beepic.jpg)
+## Project Overview
+<div style="display: flex; align-items: top; justify-content: space-between; flex-wrap: wrap;">
+  <div style="flex: 1; min-width: 350px;">
+The Hive Photo Metadata Tracker is an innovative web application designed specifically for beekeepers to organize, analyze, and extract valuable insights from their hive inspection photographs. This application transforms unstructured photo collections into a structured, searchable knowledge base that enhances beekeeping management practices.
+<h3> Business Value</h3>
+This solution addresses a critical need in apiculture by leveraging modern data techniques to:
+<ul>
+<li>Streamline documentation of hive inspections through automated metadata extraction</li>
+<li>Visualize inspection timelines for better seasonal planning and hive health monitoring</li>
+<li>Create a searchable knowledge base that correlates visual data with environment conditions</li>
+<li>Enhance decision-making by connecting weather data with inspection findings</li>
+</ul>
+<h3>  Key Features  </h3>
+<ul>
+<li>Interactive timeline visualization displaying chronological inspection history</li>  
+<li>Automated metadata extraction including dates, location, and camera information </li>   
+<li>Color palette analysis for identifying honeycomb health indicators  </li>   
+<li>Weather data integration providing environmental context for inspections  </li>  
+<li>Annotation system for beekeeper observations and hive state tracking  </li>  
+</ul>
+</div>
+<div style="text-align: center; min-width: 250px;">
+  <a href="default_beepic.jpg" target="_blank">
+  <img src="default_beepic.jpg" alt="Tech Stack Diagram" style="max-width: 400px; height: auto; cursor: zoom-in; padding-left: 2em;">
+  </a>
+</div>
+</div>
 
-## 📸 Overview
+## Architecture
+The application employs a multi-layered architecture designed for performance and extensibility:
+<div style="display: flex; align-items: top; justify-content: space-between; flex-wrap: wrap;">
+  <div style="flex: 1; min-width: 350px;">
+<ol>
+<li><b>User Interface Layer</b>: Streamlit-based web application with Plotly visualizations</li>
+<li><b>Core Processing Layer</b>: Python-based image analysis and metadata extraction</li>
+<li><b>API Integration Layer</b>: Connections to weather services and computer vision APIs</li>
+<li><b>Data Storage Layer</b>: Flexible storage with JSON/CSV export capabilitiess</li>
+</ol>
+<h3>Technology Stack</h3>
+<ul>
+<li><b>Frontend</b>: Streamlit, Plotly</li>
+<li><b>Backend</b>: Python (Image Processing)</li>
+<li><b>Data Analysis</b>: Pandas, ColorThief</li>
+<li><b>APIs</b>: Open-Meteo Weather, Google Cloud Vision</li>
+<li><b>Storage</b>: File-based with JSON/CSV export</li>
+</ul>
+</div>
+<div style="text-align: center; min-width: 250px;">
+  <a href="docs/tech-stack-depiction-lg.png" target="_blank">
+  <img src="docs/tech-stack-depiction-thumb.png" alt="Tech Stack Diagram" style="max-width: 600px; height: auto; cursor: zoom-in; padding-left: 2em;">
+  </a>
+</div>
+</div>
 
-The Hive Photo Metadata Tracker combines beekeeping, data management, and computer vision to turn hive photos into a structured, queryable knowledge base. Serving as both a beekeeping insight tool and a data management tool, this application extracts, analyzes, and stores comprehensive metadata about your beehive photos.
-
-### Features
-
-- **EXIF Metadata Extraction**: Automatically extract camera information, dates, and GPS coordinates
-- **Color Palette Analysis**: Generate and display dominant colors from your hive photos
-- **Weather Data Integration**: Retrieve historical weather data for when photos were taken via Open-Meteo API
-- **Computer Vision Analysis**: Identify bee-related elements using Google's Vision API
-- **Metadata Storage**: Save all information in both CSV and JSON formats
-- **Entry Browser**: Browse, search, and load previously saved entries
-- **Annotations**: Add notes and observations about hive state
 
 ## 🔧 Installation
 
@@ -28,70 +67,55 @@ The Hive Photo Metadata Tracker combines beekeeping, data management, and comput
 
 ### Setup
 
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/yourusername/hive-photo-tracker.git
-   cd hive-photo-tracker
-   ```
+1. Clone this repository:  
+   <code>
+   git clone https://github.com/yourusername/hive-photo-tracker.git  
+   cd hive-photo-tracker  
+   </code>
 
-2. Install required dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+2. Install required dependencies:  
+   <code>
+   pip install -r requirements.txt  
+   </code> 
 
-3. Set up Google Cloud Vision API: 
+3. Set up Google Cloud Vision API:   
    - Create a Google Cloud account if you don't already have one
    - Create a new project in the Google Cloud Console -- More detailed code example May 2025
    - Enable the Vision API for your project -- More detailed code example May 2025
    - Create a service account with Vision API access -- More detailed code example May 2025
    - Download the service account key (JSON file)
-   - Set the environment variable:
-     ```bash
-     export GOOGLE_APPLICATION_CREDENTIALS="path/to/your-credentials.json"
-     ```
+   - Set the environment variable:  
+   <code> export GOOGLE_APPLICATION_CREDENTIALS="path/to/your-credentials.json"</code>  
 
 ## 🚀 Usage
-
-### Running Locally
-
-Start the application:
-```bash
-streamlit run app.py
-```
-
-### Using the Deployed Version
-
-You can access the deployed version at [hivetracker.barbhs.com](https://hivetracker.barbhs.com)
-
 ### Typical Workflow
+<div style="display: flex; align-items: top; justify-content: space-between; flex-wrap: wrap;">
+  <div style="flex: 1; min-width: 225px;">
+<ol>
+<li>Upload a beehive photo or load an existing entry</li>
+<li>View automatically extracted metadata (EXIF, colors, etc.)</li>
+<li>Retrieve weather data for the photo's date and location</li>
+<li>Analyze the image with Vision API to detect bee-related features</li>
+<li>Add your annotations and observations</li>
+<li>Save the entry for future reference and analysis</li>
+</ol>
+<h3>Running Locally</h3>
+<code>streamlit run app.py</code>
+</div>
+<div style="text-align: center; min-width: 250px; clear: both;">
+  <a href="docs/diagram_flow.png" target="_blank">
+  <img src="docs/diagram_flow.png" alt="Tech Stack Diagram" style="max-width: 650px; height: auto; cursor: zoom-in;">
+  </a>
+</div>
+<div style="align-items: center; clear: both; ">
+<h3>Running the Live Version</h3>
+You can access the deployed version at <a href="http://hivetracker.barbhs.com">hivetracker.barbhs.com</a>
+<br>
+</div>
+</div>
 
-1. Upload a beehive photo or load an existing entry
-2. View automatically extracted metadata (EXIF, colors, etc.)
-3. Retrieve weather data for the photo's date and location
-4. Analyze the image with Vision API to detect bee-related features
-5. Add your annotations and observations
-6. Save the entry for future reference and analysis
 
-## 🗂️ Data Storage Strategy
-
-This project uses a dual-storage approach for flexibility and compatibility:
-
-### CSV Output (`hive_color_log.csv`)
-
-Used for flat, tabular exports. Includes fields such as:
-- Filename, Date Taken, Resolution, Camera Model
-- Top 5 palette colors
-- Weather fields (temperature, wind speed, etc.)
-- User annotations (hive state, notes)
-
-### JSON Output (`hive_color_log.json`)
-
-Used for structured, nested records. Includes everything in the CSV plus:
-- Full weather information dictionary
-- Complete Vision API analysis results
-- Structured metadata for more complex queries
-
-## 🔄 Project Structure
+## 🔄 Project Structure - to edit
 
 ```
 hive-photo-tracker/
@@ -110,34 +134,25 @@ hive-photo-tracker/
 
 This application can be deployed to Google Cloud Run using Docker:
 
-1. Update the `PROJECT_ID` in `deploy.sh` with your GCP project ID
-2. Make the deploy script executable:
-   ```bash
-   chmod +x deploy.sh
-   ```
-3. Run the deployment script:
-   ```bash
-   ./deploy.sh
-   ```
+1. Update the `PROJECT_ID` in `deploy.sh` with your GCP project ID  
+2. Make the deploy script executable:    
+   <code>chmod +x deploy.sh </code>
+3. Run the deployment script:   
+   <code>./deploy.sh</code>
 
-## 🔍 Future Enhancements
+## 🔍 Implementation Strategy
+The development approach prioritizes rapid iteration and user-centered design:
 
-- Enhanced search capabilities
-- Data visualization and trends analysis
-- Beekeeping ontology integration
-- Multi-user support
-- Advanced analytics on hive health
+**Phase 1**: Core timeline and metadata extraction functionality  
+**Phase 2**: Weather API integration and enhanced visualization  
+**Phase 3**: Computer vision analysis for bee/hive health monitoring  
+**Phase 4**: Mobile compatibility and cloud storage integration  
 
-## 👩‍💻 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 📄 License
-
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## 🙌 Author
-
 Barbara - Beekeeper, Data Scientist, and Certified Data Management Professional (CDMP)
 
 ---

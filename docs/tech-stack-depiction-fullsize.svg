@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect x="0" y="0" width="800" height="600" fill="#f8f9fa" />
+  
+  <!-- Title -->
+  <text x="400" y="40" font-family="Arial" font-size="24" font-weight="bold" text-anchor="middle" fill="#333">
+    Hive Photo Metadata Tracker: Technical Architecture
+  </text>
+  <text x="400" y="70" font-family="Arial" font-size="16" text-anchor="middle" fill="#666">
+    Comprehensive System Architecture and Technology Stack
+  </text>
+  
+  <!-- Layer backgrounds -->
+  <rect x="50" y="120" width="590" height="90" rx="10" ry="10" fill="#D6EAF8" stroke="#2E86C1" stroke-width="2" />
+  <rect x="50" y="220" width="590" height="90" rx="10" ry="10" fill="#D0ECE7" stroke="#16A085" stroke-width="2" />
+  <rect x="50" y="320" width="590" height="90" rx="10" ry="10" fill="#E8DAEF" stroke="#7D3C98" stroke-width="2" />
+  <rect x="50" y="420" width="590" height="90" rx="10" ry="10" fill="#FAE5D3" stroke="#D35400" stroke-width="2" />
+  <rect x="50" y="520" width="590" height="70" rx="10" ry="10" fill="#D6DBDF" stroke="#2C3E50" stroke-width="2" />
+  
+  <!-- Layer labels -->
+  <text x="70" y="145" font-family="Arial" font-size="18" font-weight="bold" fill="#2E86C1">User Interface Layer</text>
+  <text x="70" y="245" font-family="Arial" font-size="18" font-weight="bold" fill="#16A085">Core Processing Layer</text>
+  <text x="70" y="345" font-family="Arial" font-size="18" font-weight="bold" fill="#7D3C98">API Integration Layer</text>
+  <text x="70" y="445" font-family="Arial" font-size="18" font-weight="bold" fill="#D35400">Data Storage Layer</text>
+  <text x="70" y="540" font-family="Arial" font-size="18" font-weight="bold" fill="#2C3E50">External Services</text>
+  
+  <!-- UI Layer Components -->
+  <rect x="70" y="155" width="120" height="45" rx="5" ry="5" fill="#AED6F1" stroke="#2E86C1" />
+  <text x="130" y="182" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">Streamlit Web App</text>
+  
+  <rect x="200" y="155" width="120" height="45" rx="5" ry="5" fill="#AED6F1" stroke="#2E86C1" />
+  <text x="260" y="182" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">Plotly Timeline</text>
+  
+  <rect x="330" y="155" width="120" height="45" rx="5" ry="5" fill="#AED6F1" stroke="#2E86C1" />
+  <text x="390" y="182" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">Image Display</text>
+  
+  <rect x="460" y="155" width="170" height="45" rx="5" ry="5" fill="#AED6F1" stroke="#2E86C1" />
+  <text x="545" y="182" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">Metadata Display Components</text>
+  
+  <!-- Core Processing Layer Components -->
+  <rect x="70" y="255" width="110" height="45" rx="5" ry="5" fill="#A2D9CE" stroke="#16A085" />
+  <text x="125" y="282" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">Image Processor</text>
+  
+  <rect x="190" y="255" width="110" height="45" rx="5" ry="5" fill="#A2D9CE" stroke="#16A085" />
+  <text x="245" y="282" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">EXIF Extractor</text>
+  
+  <rect x="310" y="255" width="110" height="45" rx="5" ry="5" fill="#A2D9CE" stroke="#16A085" />
+  <text x="365" y="282" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">Color Analysis</text>
+  
+  <rect x="430" y="255" width="110" height="45" rx="5" ry="5" fill="#A2D9CE" stroke="#16A085" />
+  <text x="485" y="282" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">Timeline Manager</text>
+  
+  <rect x="550" y="255" width="80" height="45" rx="5" ry="5" fill="#A2D9CE" stroke="#16A085" />
+  <text x="590" y="282" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">Session State</text>
+  
+  <!-- API Integration Layer Components -->
+  <rect x="70" y="355" width="170" height="45" rx="5" ry="5" fill="#D2B4DE" stroke="#7D3C98" />
+  <text x="155" y="382" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">API Service Controller</text>
+  
+  <rect x="250" y="355" width="170" height="45" rx="5" ry="5" fill="#D2B4DE" stroke="#7D3C98" />
+  <text x="335" y="382" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">Open-Meteo Weather Adapter</text>
+  
+  <rect x="430" y="355" width="200" height="45" rx="5" ry="5" fill="#D2B4DE" stroke="#7D3C98" />
+  <text x="530" y="382" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">Google Cloud Vision API Adapter</text>
+  
+  <!-- Data Storage Layer Components -->
+  <rect x="70" y="455" width="130" height="45" rx="5" ry="5" fill="#F5CBA7" stroke="#D35400" />
+  <text x="135" y="482" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">Storage Manager</text>
+  
+  <rect x="210" y="455" width="130" height="45" rx="5" ry="5" fill="#F5CBA7" stroke="#D35400" />
+  <text x="275" y="482" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">Image Cache Service</text>
+  
+  <rect x="350" y="455" width="130" height="45" rx="5" ry="5" fill="#F5CBA7" stroke="#D35400" />
+  <text x="415" y="482" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">JSON Export Service</text>
+  
+  <rect x="490" y="455" width="140" height="45" rx="5" ry="5" fill="#F5CBA7" stroke="#D35400" />
+  <text x="560" y="482" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">CSV Export Service</text>
+  
+  <!-- External Services -->
+  <rect x="80" y="545" width="170" height="40" rx="5" ry="5" fill="#AEB6BF" stroke="#2C3E50" />
+  <text x="165" y="570" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">Open-Meteo Weather API</text>
+  
+  <rect x="260" y="545" width="180" height="40" rx="5" ry="5" fill="#AEB6BF" stroke="#2C3E50" />
+  <text x="350" y="570" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">Google Cloud Vision API</text>
+  
+  <rect x="450" y="545" width="180" height="40" rx="5" ry="5" fill="#AEB6BF" stroke="#2C3E50" />
+  <text x="540" y="570" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">Image Sources (URLs/Files)</text>
+  
+  <!-- Connecting lines (vertical) -->
+  <line x1="130" y1="200" x2="130" y2="255" stroke="#2E86C1" stroke-width="2" stroke-dasharray="5,3" />
+  <line x1="590" y1="200" x2="590" y2="255" stroke="#2E86C1" stroke-width="2" stroke-dasharray="5,3" />
+  <line x1="155" y1="300" x2="155" y2="355" stroke="#16A085" stroke-width="2" stroke-dasharray="5,3" />
+  <line x1="335" y1="300" x2="335" y2="355" stroke="#16A085" stroke-width="2" stroke-dasharray="5,3" />
+  <line x1="530" y1="300" x2="530" y2="355" stroke="#16A085" stroke-width="2" stroke-dasharray="5,3" />
+  <line x1="135" y1="400" x2="135" y2="455" stroke="#7D3C98" stroke-width="2" stroke-dasharray="5,3" />
+  <line x1="165" y1="500" x2="165" y2="530" stroke="#D35400" stroke-width="2" stroke-dasharray="5,3" />
+  
+  <!-- Connecting lines (horizontal) -->
+  
+ 
+  <!-- Legend -->
+  <rect x="655" y="100" width="15" height="15" fill="#AED6F1" stroke="#2E86C1" />
+  <text x="675" y="112" font-family="Arial" font-size="12" fill="#333">UI Components</text>
+  
+  <rect x="655" y="120" width="15" height="15" fill="#A2D9CE" stroke="#16A085" />
+  <text x="675" y="132" font-family="Arial" font-size="12" fill="#333">Processing Components</text>
+  
+  <rect x="655" y="140" width="15" height="15" fill="#D2B4DE" stroke="#7D3C98" />
+  <text x="675" y="152" font-family="Arial" font-size="12" fill="#333">API Integration</text>
+  
+  <rect x="655" y="160" width="15" height="15" fill="#F5CBA7" stroke="#D35400" />
+  <text x="675" y="172" font-family="Arial" font-size="12" fill="#333">Data Storage</text>
+  
+  <rect x="655" y="180" width="15" height="15" fill="#AEB6BF" stroke="#2C3E50" />
+  <text x="675" y="192" font-family="Arial" font-size="12" fill="#333">External Services</text>
+</svg>

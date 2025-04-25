@@ -18,9 +18,9 @@ def logout():
 login_page = st.Page("src/login.py", title="Log in", icon=":material/login:")
 logout_page = st.Page(logout, title="Log out", icon=":material/logout:")
 
-dashboard = st.Page("app_draft.py", title="First Draft", icon=":material/dashboard:", default=True)
+dashboard = st.Page("app.py", title="First Draft", icon=":material/dashboard:", default=True)
 
-# dashboard = st.Page("app_new.py", title="NEW Draft", icon=":material/dashboard:", default=True)
+# dashboard = st.Page("app_draft.py", title="NEW Draft", icon=":material/dashboard:", default=True)
 
 calendar = st.Page("src/calendar.py", title="Calendar", icon=":material/calendar_month:")
 
