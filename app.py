@@ -66,6 +66,16 @@ st.markdown("""
     .stMarkdown p {
         margin-bottom: 0.5rem;
     }
+    .image-placeholder {
+        background-color: rgba(30, 30, 30, 0.05);
+        border-radius: 10px;
+        height: 300px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-style: italic;
+        color: rgba(100, 100, 100, 0.7);
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -85,62 +95,11 @@ with update_col:
     if st.button("🔄 Update Timeline", help="Click to refresh the timeline"):
         st.rerun()
         
-st.markdown("<br><hr><br>", unsafe_allow_html=True)
+st.markdown("<br>", unsafe_allow_html=True)
 
-# Create two columns for image input methods
-col1, col2 = st.columns(2)
-
-with col1:
-    # URL input option
-    st.markdown("### Enter an Image URL")
-    img_url = st.text_input(
-        "Image URL", 
-        value="https://drive.google.com/uc?export=view&id=1aP-MjQ_wGG7RFyO0skn_cu7A2r7bh4iA",
-        help="Enter the URL of a beehive photo"
-    )
-    
-    if st.button("Process URL Image"):
-        if img_url:
-            # Check if this is a new URL
-            if 'last_processed_url' not in st.session_state or st.session_state.last_processed_url != img_url:
-                with st.spinner("Processing image from URL..."):
-                    success = process_url_image(img_url)
-                    if success:
-                        st.success("Image processed successfully!")
-                        # Record this URL as processed
-                        st.session_state.last_processed_url = img_url
-                        # No rerun - let Streamlit handle the flow
-            else:
-                st.info("Image already processed")
-        else:
-            st.warning("Please enter a valid image URL")
-
-with col2:
-    # File upload option
-    st.markdown("### Upload an Image")
-    uploaded_file = st.file_uploader("Choose an image file", type=["jpg", "jpeg", "png"])
-    
-    if uploaded_file is not None:
-        # Check if this is a new file upload
-        file_key = f"{uploaded_file.name}_{uploaded_file.size}"
-        if 'last_uploaded_file' not in st.session_state or st.session_state.last_uploaded_file != file_key:
-            with st.spinner("Processing uploaded image..."):
-                # Get the file name
-                file_name = uploaded_file.name
-                
-                # Process the image
-                success = process_image(uploaded_file, file_name)
-                if success:
-                    st.success("Image processed successfully!")
-                    # Record this file as processed
-                    st.session_state.last_uploaded_file = file_key
-                    # No rerun - let Streamlit handle the flow
-
-
-# Display the current image if available
+# Display the current image if available or show placeholder
 if st.session_state.current_image:
-    # Main container for image and metadata
-    st.markdown("---")
+    # Main container for image
     
     # Create columns for image and basic metadata
     img_col, meta_col = st.columns([3, 2])
@@ -175,6 +134,57 @@ if st.session_state.current_image:
             st.markdown("**Location:** Not available")
         
         st.markdown('</div>', unsafe_allow_html=True)
+
+    # Data ingestion section in collapsed expander when image is present
+    with st.expander("🔍 Upload Another Image", expanded=False):
+        # Create two columns for image input methods
+        col1, col2 = st.columns(2)
+
+        with col1:
+            # URL input option
+            st.markdown("### Enter an Image URL")
+            img_url = st.text_input(
+                "Image URL", 
+                value="https://drive.google.com/uc?export=view&id=1aP-MjQ_wGG7RFyO0skn_cu7A2r7bh4iA",
+                help="Enter the URL of a beehive photo"
+            )
+            
+            if st.button("Process URL Image"):
+                if img_url:
+                    # Check if this is a new URL
+                    if 'last_processed_url' not in st.session_state or st.session_state.last_processed_url != img_url:
+                        with st.spinner("Processing image from URL..."):
+                            success = process_url_image(img_url)
+                            if success:
+                                st.success("Image processed successfully!")
+                                # Record this URL as processed
+                                st.session_state.last_processed_url = img_url
+                                # No rerun - let Streamlit handle the flow
+                    else:
+                        st.info("Image already processed")
+                else:
+                    st.warning("Please enter a valid image URL")
+
+        with col2:
+            # File upload option
+            st.markdown("### Upload an Image")
+            uploaded_file = st.file_uploader("Choose an image file", type=["jpg", "jpeg", "png"])
+            
+            if uploaded_file is not None:
+                # Check if this is a new file upload
+                file_key = f"{uploaded_file.name}_{uploaded_file.size}"
+                if 'last_uploaded_file' not in st.session_state or st.session_state.last_uploaded_file != file_key:
+                    with st.spinner("Processing uploaded image..."):
+                        # Get the file name
+                        file_name = uploaded_file.name
+                        
+                        # Process the image
+                        success = process_image(uploaded_file, file_name)
+                        if success:
+                            st.success("Image processed successfully!")
+                            # Record this file as processed
+                            st.session_state.last_uploaded_file = file_key
+                            # No rerun - let Streamlit handle the flow
     
     # Three columns under the image for Color Palette, Weather Data, and Annotations
     st.markdown("### Inspection Details")
@@ -249,6 +259,61 @@ if st.session_state.current_image:
                 
         st.markdown('</div>', unsafe_allow_html=True)
 
+else:
+    # Placeholder for image when none is loaded
+    st.markdown('<div class="image-placeholder"><p>Upload a hive photo to see it displayed here</p></div>', unsafe_allow_html=True)
+    
+    # Data ingestion section in expanded expander when no image is present
+    with st.expander("📤 Upload Your First Image", expanded=True):
+        # Create two columns for image input methods
+        col1, col2 = st.columns(2)
+
+        with col1:
+            # URL input option
+            st.markdown("### Enter an Image URL")
+            img_url = st.text_input(
+                "Image URL", 
+                value="https://drive.google.com/uc?export=view&id=1aP-MjQ_wGG7RFyO0skn_cu7A2r7bh4iA",
+                help="Enter the URL of a beehive photo"
+            )
+            
+            if st.button("Process URL Image"):
+                if img_url:
+                    # Check if this is a new URL
+                    if 'last_processed_url' not in st.session_state or st.session_state.last_processed_url != img_url:
+                        with st.spinner("Processing image from URL..."):
+                            success = process_url_image(img_url)
+                            if success:
+                                st.success("Image processed successfully!")
+                                # Record this URL as processed
+                                st.session_state.last_processed_url = img_url
+                                # No rerun - let Streamlit handle the flow
+                    else:
+                        st.info("Image already processed")
+                else:
+                    st.warning("Please enter a valid image URL")
+
+        with col2:
+            # File upload option
+            st.markdown("### Upload an Image")
+            uploaded_file = st.file_uploader("Choose an image file", type=["jpg", "jpeg", "png"])
+            
+            if uploaded_file is not None:
+                # Check if this is a new file upload
+                file_key = f"{uploaded_file.name}_{uploaded_file.size}"
+                if 'last_uploaded_file' not in st.session_state or st.session_state.last_uploaded_file != file_key:
+                    with st.spinner("Processing uploaded image..."):
+                        # Get the file name
+                        file_name = uploaded_file.name
+                        
+                        # Process the image
+                        success = process_image(uploaded_file, file_name)
+                        if success:
+                            st.success("Image processed successfully!")
+                            # Record this file as processed
+                            st.session_state.last_uploaded_file = file_key
+                            # No rerun - let Streamlit handle the flow
+
 # Sidebar for additional controls and inspection details
 with st.sidebar:
     st.header("Inspection Details")
@@ -257,13 +322,22 @@ with st.sidebar:
         st.write(f"Total Inspections: {len(st.session_state.inspections)}")
         st.write(f"Total Photos: {sum(insp['photo_count'] for insp in st.session_state.inspections)}")
         
-        # Display a list of inspections
+        # Display a list of inspections with letter identifiers
         st.subheader("Inspection History")
-        for i, inspection in enumerate(st.session_state.inspections):
+        
+        # Sort inspections by date
+        sorted_inspections = sorted(
+            enumerate(st.session_state.inspections), 
+            key=lambda x: x[1]['date'] if isinstance(x[1]['date'], datetime) else datetime.strptime(x[1]['date'], "%Y:%m:%d %H:%M:%S")
+        )
+        
+        # Generate letter identifiers
+        for idx, (i, inspection) in enumerate(sorted_inspections):
+            letter = chr(65 + idx % 26)  # A, B, C, ... Z, then AA, AB, etc.
             date_str = inspection['date'].strftime("%b %d, %Y") if isinstance(inspection['date'], datetime) else inspection['date']
-            if st.button(f"{date_str} - {inspection['photo_count']} photos", key=f"insp_{i}"):
+            if st.button(f"Inspection {letter}: {date_str} - {inspection['photo_count']} photos", key=f"insp_{i}"):
                 st.session_state.selected_inspection = i
-                st.info(f"Selected inspection from {date_str}")
+                st.info(f"Selected inspection {letter} from {date_str}")
     else:
         st.info("No inspections recorded yet. Start by uploading a hive photo.")
     
