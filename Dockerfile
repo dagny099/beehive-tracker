@@ -24,7 +24,7 @@ COPY --from=builder /usr/local/lib/python3.9/site-packages/ /usr/local/lib/pytho
 COPY --from=builder /usr/local/bin/ /usr/local/bin/
 
 # Create app directories
-RUN mkdir -p /app/data /app/.streamlit /app/src
+RUN mkdir -p /app/data /app/.streamlit /app/src /app/data/uploads /app/src/utils
 
 # Copy streamlit config if it exists
 COPY .streamlit/config.toml /app/.streamlit/ 
@@ -32,10 +32,17 @@ COPY .streamlit/config.toml /app/.streamlit/
 # Copy application code 
 COPY run_tracker.py /app/
 COPY src/login.py /app/src/
-COPY src/calendar.py /app/src/
+COPY src/calendar_view.py /app/src/
+COPY src/gallery_view.py /app/src/
 COPY src/app.py /app/src/
 COPY src/timeline_component.py /app/src/
+COPY src/app_components.py /app/src/
+COPY src/utils/session_manager.py /app/src/utils
+COPY src/utils/image_processor.py /app/src/utils
+COPY src/utils/data_handler.py /app/src/utils
 COPY src/default_beepic.jpg /app/src/ 
+COPY src/default_beepic2.jpg /app/src/ 
+
 
 # Copy service account key
 COPY .streamlit/key.json /app/

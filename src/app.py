@@ -81,23 +81,71 @@ def main():
     if 'app_initialized' not in st.session_state:
         st.session_state.app_initialized = True
         
-        # Set the path to the default local image
-        default_image_path = "src/default_beepic2.jpg"
+        # Try to find the default image
+        default_image_paths = ["src/default_beepic2.jpg", "src/default_beepic.jpg", "default_beepic2.jpg", "default_beepic.jpg"]
         
-        if 'current_image' not in st.session_state or st.session_state.current_image is None:
-            with st.spinner("Loading initial image..."):
+        # Let's try to find and load the first available image
+        for img_path in default_image_paths:
+            if os.path.exists(img_path):
                 try:
-                    # Open and process the local image file
-                    with open(default_image_path, "rb") as file:
+                    # Directly set the image without complex processing
+                    with open(img_path, "rb") as file:
                         file_content = file.read()
-                        # Process image
-                        from src.timeline_component import process_image
-                        success = process_image(io.BytesIO(file_content), "default_beepic2.jpg")
-                        if success:
-                            st.session_state.last_uploaded_file = "default_beepic2.jpg"
-                            handle_image_processing(success)
+                        # Set basic session state variables manually
+                        st.session_state.current_image = file_content
+                        st.session_state.filename = os.path.basename(img_path)
+                        st.session_state.date_taken = datetime.now().strftime("%Y:%m:%d %H:%M:%S")
+                        st.session_state.date_source = "Default image"
+                        st.session_state.camera_model = "Default"
+                        st.session_state.image_resolution = "Unknown"
+                        st.session_state.lat = None
+                        st.session_state.lon = None
+                        
+                        # Set a simple default color palette
+                        st.session_state.palette_hex = ["#FFC300", "#FFD700", "#FFEB99", "#FFF5D6", "#FFFBED"]
+                        
+                        # Initialize weather info if not present
+                        if 'weather_info' not in st.session_state:
+                            st.session_state.weather_info = {
+                                "weather_temperature_C": None,
+                                "weather_precipitation_mm": None,
+                                "weather_cloud_cover_percent": None,
+                                "weather_wind_speed_kph": None,
+                                "weather_code": None,
+                                "weather_source": "Not retrieved"
+                            }
+                        
+                        # Create a simple photo data dictionary
+                        photo_data = {
+                            'filename': os.path.basename(img_path),
+                            'date_taken': st.session_state.date_taken,
+                            'camera_model': 'Default',
+                            'resolution': 'Unknown',
+                            'color_palette': st.session_state.palette_hex
+                        }
+                        
+                        # Create a default inspection with this photo
+                        today = datetime.now()
+                        if 'inspections' not in st.session_state:
+                            st.session_state.inspections = []
+                        
+                        st.session_state.inspections.append({
+                            'date': today,
+                            'location': 'Default location',
+                            'photos': [photo_data],
+                            'photo_count': 1,
+                            'weather_summary': 'Not recorded'
+                        })
+                        
+                        # Set selected inspection to the new one
+                        st.session_state.selected_inspection = len(st.session_state.inspections) - 1
+                    
+                    # Break after successfully loading an image
+                    break
                 except Exception as e:
-                    st.error(f"Error loading default image: {e}")
+                    # If this image fails, try the next one
+                    continue
+
     
     # App title and description
     st.markdown("# 🐝 Hive Photo Metadata Tracker")
