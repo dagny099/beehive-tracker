@@ -1,389 +1,137 @@
+# src/app3.py
 import streamlit as st
-import io
-import base64
-from PIL import Image
 from datetime import datetime
+import io
+import time
+from PIL import Image
 import os
-import json
-import pandas as pd
-import plotly.graph_objects as go
 
-# Import the timeline component module
-from src.timeline_component import (
-    initialize_session_state, 
-    render_timeline, 
-    process_url_image, 
-    process_image
+# Import components and utilities
+from src.timeline_component import initialize_session_state, render_timeline
+from src.app_components import (
+    display_image_and_photo_metadata,
+    display_inspection_metadata,
+    display_photo_analysis,
+    display_image_upload_options,
+    render_sidebar,
+    handle_image_processing
 )
 
-# Set page configuration
-st.set_page_config(
-    page_title="Hive Photo Metadata Tracker",
-    page_icon="🐝",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
-# Initialize session state
-initialize_session_state()
-if 'needs_rerun' not in st.session_state:
-    st.session_state.needs_rerun = False
-if 'last_uploaded_file' not in st.session_state:
-    st.session_state.last_uploaded_file = None
-if 'last_processed_url' not in st.session_state:
-    st.session_state.last_processed_url = None
-
-# ------ I ADDED THIS TO SPEED UP THE TIME FOR USER TO SEE SMTHG ... UNTIL I OPTIMIZE THE IMAGE LOADING ------
-# Auto-load default image on first run
-if 'app_initialized' not in st.session_state:
-    # This is the first time the app is running in this session
-    st.session_state.app_initialized = True
+def main():
+    """Main dashboard for the Hive Photo Metadata Tracker"""
+    # Apply custom CSS
+    st.markdown("""
+    <style>
+        .main .block-container {
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+        }
+        .honey-header {
+            color: #FFC300;
+            font-weight: 600;
+        }
+        .metadata-container {
+            background-color: rgba(30, 30, 30, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            height: 100%;
+        }
+        .color-swatch {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            margin-right: 5px;
+            border-radius: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        h3, h4 {
+            margin-top: 0 !important;
+            margin-bottom: 0.5rem !important;
+        }
+        .stMarkdown p {
+            margin-bottom: 0.5rem;
+        }
+        .image-placeholder {
+            background-color: rgba(30, 30, 30, 0.05);
+            border-radius: 10px;
+            height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-style: italic;
+            color: rgba(100, 100, 100, 0.7);
+        }
+        .stButton>button {
+            background-color: #FFC300;
+            color: #333;
+            font-weight: 500;
+        }
+        .stButton>button:hover {
+            background-color: #FFD700;
+            color: #333;
+        }
+    </style>
+    """, unsafe_allow_html=True)
     
-    # Get the default image URL
-    default_img_url = "https://drive.google.com/uc?export=view&id=1aP-MjQ_wGG7RFyO0skn_cu7A2r7bh4iA"
+    # Initialize session state
+    initialize_session_state()
     
-    # Only process on first run, and only if no image is already loaded
-    if 'current_image' not in st.session_state or st.session_state.current_image is None:
-        with st.spinner("Loading initial image..."):
-            # Process the default image
-            success = process_url_image(default_img_url)
-            if success:
-                st.session_state.last_processed_url = default_img_url
-
-# Custom CSS for styling
-st.markdown("""
-<style>
-    .main .block-container {
-        padding-top: 1rem;
-        padding-bottom: 1rem;
-    }
-    .honey-header {
-        color: #FFC300;
-        font-weight: 600;
-    }
-    .metadata-container {
-        background-color: rgba(30, 30, 30, 0.1);
-        border-radius: 10px;
-        padding: 15px;
-        margin-bottom: 15px;
-        height: 100%;
-    }
-    .color-swatch {
-        display: inline-block;
-        width: 30px;
-        height: 30px;
-        margin-right: 5px;
-        border-radius: 5px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-    h3, h4 {
-        margin-top: 0 !important;
-        margin-bottom: 0.5rem !important;
-    }
-    .stMarkdown p {
-        margin-bottom: 0.5rem;
-    }
-    .image-placeholder {
-        background-color: rgba(30, 30, 30, 0.05);
-        border-radius: 10px;
-        height: 300px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-style: italic;
-        color: rgba(100, 100, 100, 0.7);
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# App title and description
-st.markdown("# 🐝 Hive Photo Metadata Tracker")
-st.markdown("""
-Track and organize your beehive photos with rich metadata, including weather conditions, 
-color analysis, and computer vision insights.
-""")
-
-# Render the timeline
-timeline = render_timeline()
-
-# Add update timeline button and space after timeline
-update_col, space_col = st.columns([1, 3])
-with update_col:
-    if st.button("🔄 Update Timeline", help="Click to refresh the timeline"):
-        st.rerun()
+    # Auto-load default image on first run (only once at startup)
+    if 'app_initialized' not in st.session_state:
+        st.session_state.app_initialized = True
         
-st.markdown("<br>", unsafe_allow_html=True)
-
-# Display the current image if available or show placeholder
-if st.session_state.current_image:
-    # Main container for image
-    
-    # Create columns for image and basic metadata
-    img_col, meta_col = st.columns([3, 2])
-    
-    with img_col:
-        # Display the image
-        if hasattr(st.session_state.current_image, 'seek'):
-            st.session_state.current_image.seek(0)
+        # Set the path to the default local image
+        default_image_path = "src/default_beepic2.jpg"
         
-        if isinstance(st.session_state.current_image, bytes):
-            img = Image.open(io.BytesIO(st.session_state.current_image))
-            st.image(img, caption=st.session_state.filename, use_container_width=True)
-        else:
-            st.image(st.session_state.current_image, caption=st.session_state.filename, use_container_width=True)
-    
-    with meta_col:
-        # Display core image metadata
-        st.markdown("<h3>📷 Image Metadata</h3>", unsafe_allow_html=True)
-        st.markdown('<div class="metadata-container">', unsafe_allow_html=True)
-        
-        # Basic metadata - note reorganized order
-        st.markdown(f"**Date Taken:** {st.session_state.date_taken}")
-        st.markdown(f"**Source:** {st.session_state.date_source}")
-        st.markdown(f"**Filename:** {st.session_state.filename}")
-        st.markdown(f"**Camera Model:** {st.session_state.camera_model}")
-        st.markdown(f"**Resolution:** {st.session_state.image_resolution}")
-        
-        # Location
-        if st.session_state.lat and st.session_state.lon:
-            st.markdown(f"**Location:** {st.session_state.lat:.6f}, {st.session_state.lon:.6f}")
-        else:
-            st.markdown("**Location:** Not available")
-        
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    # Data ingestion section in collapsed expander when image is present
-    with st.expander("🔍 Upload Another Image", expanded=False):
-        # Create two columns for image input methods
-        col1, col2 = st.columns(2)
-
-        with col1:
-            # URL input option
-            st.markdown("### Enter an Image URL")
-            img_url = st.text_input(
-                "Image URL", 
-                value="https://drive.google.com/uc?export=view&id=1aP-MjQ_wGG7RFyO0skn_cu7A2r7bh4iA",
-                help="Enter the URL of a beehive photo"
-            )
-            
-            if st.button("Process URL Image"):
-                if img_url:
-                    # Check if this is a new URL
-                    if 'last_processed_url' not in st.session_state or st.session_state.last_processed_url != img_url:
-                        with st.spinner("Processing image from URL..."):
-                            success = process_url_image(img_url)
-                            if success:
-                                st.success("Image processed successfully!")
-                                # Record this URL as processed
-                                st.session_state.last_processed_url = img_url
-                                # No rerun - let Streamlit handle the flow
-                    else:
-                        st.info("Image already processed")
-                else:
-                    st.warning("Please enter a valid image URL")
-
-        with col2:
-            # File upload option
-            st.markdown("### Upload an Image")
-            uploaded_file = st.file_uploader("Choose an image file", type=["jpg", "jpeg", "png"])
-            
-            if uploaded_file is not None:
-                # Check if this is a new file upload
-                file_key = f"{uploaded_file.name}_{uploaded_file.size}"
-                if 'last_uploaded_file' not in st.session_state or st.session_state.last_uploaded_file != file_key:
-                    with st.spinner("Processing uploaded image..."):
-                        # Get the file name
-                        file_name = uploaded_file.name
-                        
-                        # Process the image
-                        success = process_image(uploaded_file, file_name)
+        if 'current_image' not in st.session_state or st.session_state.current_image is None:
+            with st.spinner("Loading initial image..."):
+                try:
+                    # Open and process the local image file
+                    with open(default_image_path, "rb") as file:
+                        file_content = file.read()
+                        # Process image
+                        from src.timeline_component import process_image
+                        success = process_image(io.BytesIO(file_content), "default_beepic2.jpg")
                         if success:
-                            st.success("Image processed successfully!")
-                            # Record this file as processed
-                            st.session_state.last_uploaded_file = file_key
-                            # No rerun - let Streamlit handle the flow
+                            st.session_state.last_uploaded_file = "default_beepic2.jpg"
+                            handle_image_processing(success)
+                except Exception as e:
+                    st.error(f"Error loading default image: {e}")
     
-    # Three columns under the image for Color Palette, Weather Data, and Annotations
-    st.markdown("### Inspection Details")
-    col1, col2, col3 = st.columns(3)
+    # App title and description
+    st.markdown("# 🐝 Hive Photo Metadata Tracker")
+    st.markdown("""
+    Track and organize your beehive photos with rich metadata, including weather conditions, 
+    color analysis, and computer vision insights.
+    """)
     
-    # Color palette column
-    with col1:
-        st.markdown("<h4>🎨 Color Palette</h4>", unsafe_allow_html=True)
-        st.markdown('<div class="metadata-container">', unsafe_allow_html=True)
-        
-        palette_html = '<div style="display:flex; margin-bottom: 15px;">'
-        for color in st.session_state.palette_hex:
-            palette_html += f'<div class="color-swatch" style="background-color: {color};" title="{color}"></div>'
-        palette_html += '</div>'
-        st.markdown(palette_html, unsafe_allow_html=True)
-        
-        # Dominant color
-        st.markdown(f"**Dominant Color:** {st.session_state.palette_hex[0]}")
-        
-        # Additional palette data could go here
-        st.markdown("The dominant colors in your hive photo can reveal important information about hive health, pollen types, and seasonal changes.")
-        
-        st.markdown('</div>', unsafe_allow_html=True)
+    # Render the timeline with some margin
+    st.markdown('<div style="margin: 15px 0;"></div>', unsafe_allow_html=True)
+    timeline = render_timeline()
+    st.markdown('<div style="margin: 15px 0;"></div>', unsafe_allow_html=True)
     
-    # Weather data column
-    with col2:
-        st.markdown("<h4>🌦️ Weather Data</h4>", unsafe_allow_html=True)
-        st.markdown('<div class="metadata-container">', unsafe_allow_html=True)
+    st.markdown("<br>", unsafe_allow_html=True)
         
-        if st.session_state.weather_info["weather_source"] == "Not retrieved":
-            st.markdown("Weather data not retrieved yet.")
-            if st.button("Get Weather Data"):
-                st.info("This would fetch weather data from Open-Meteo API in a real implementation.")
-                # Simulate weather data for demo
-                st.session_state.weather_info.update({
-                    "weather_temperature_C": 23.5,
-                    "weather_precipitation_mm": 0.0,
-                    "weather_cloud_cover_percent": 25,
-                    "weather_wind_speed_kph": 8.2,
-                    "weather_code": 1,  # Clear sky
-                    "weather_source": "Open-Meteo (Simulated)"
-                })
-                st.rerun()
-        else:
-            st.markdown(f"**Temperature:** {st.session_state.weather_info['weather_temperature_C']}°C")
-            st.markdown(f"**Precipitation:** {st.session_state.weather_info['weather_precipitation_mm']} mm")
-            st.markdown(f"**Cloud Cover:** {st.session_state.weather_info['weather_cloud_cover_percent']}%")
-            st.markdown(f"**Wind Speed:** {st.session_state.weather_info['weather_wind_speed_kph']} km/h")
-            st.markdown(f"**Source:** {st.session_state.weather_info['weather_source']}")
-            
-        st.markdown('</div>', unsafe_allow_html=True)
-    
-    # Annotations column
-    with col3:
-        st.markdown("<h4>🖊️ Annotations</h4>", unsafe_allow_html=True)
-        st.markdown('<div class="metadata-container">', unsafe_allow_html=True)
+    # Main app content
+    if 'current_image' in st.session_state and st.session_state.current_image:
+        # Display image and photo metadata
+        display_image_and_photo_metadata()
         
-        # Hive state dropdown
-        hive_states = ["Select...", "Active Foraging", "Calm/Normal", "Defensive", "Swarming Preparation", "Queen Issues", "Honey Flow", "Dormant/Winter"]
-        selected_state = st.selectbox("Hive State", hive_states, index=0)
+        # Display inspection metadata
+        display_inspection_metadata()
         
-        # Notes text area
-        notes = st.text_area("Beekeeper Notes", height=100, 
-                           placeholder="Enter your observations about the hive condition, behavior, etc.")
+        # Display photo analysis sections
+        display_photo_analysis()
         
-        if st.button("Save Annotations"):
-            if selected_state != "Select...":
-                st.success("Annotations saved!")
-                # In a real app, you would save these to your data structure
-            else:
-                st.warning("Please select a hive state")
-                
-        st.markdown('</div>', unsafe_allow_html=True)
-
-else:
-    # Placeholder for image when none is loaded
-    st.markdown('<div class="image-placeholder"><p>Upload a hive photo to see it displayed here</p></div>', unsafe_allow_html=True)
-    
-    # Data ingestion section in expanded expander when no image is present
-    with st.expander("📤 Upload Your First Image", expanded=True):
-        # Create two columns for image input methods
-        col1, col2 = st.columns(2)
-
-        with col1:
-            # URL input option
-            st.markdown("### Enter an Image URL")
-            img_url = st.text_input(
-                "Image URL", 
-                value="https://drive.google.com/uc?export=view&id=1aP-MjQ_wGG7RFyO0skn_cu7A2r7bh4iA",
-                help="Enter the URL of a beehive photo"
-            )
-            
-            if st.button("Process URL Image"):
-                if img_url:
-                    # Check if this is a new URL
-                    if 'last_processed_url' not in st.session_state or st.session_state.last_processed_url != img_url:
-                        with st.spinner("Processing image from URL..."):
-                            success = process_url_image(img_url)
-                            if success:
-                                st.success("Image processed successfully!")
-                                # Record this URL as processed
-                                st.session_state.last_processed_url = img_url
-                                # No rerun - let Streamlit handle the flow
-                    else:
-                        st.info("Image already processed")
-                else:
-                    st.warning("Please enter a valid image URL")
-
-        with col2:
-            # File upload option
-            st.markdown("### Upload an Image")
-            uploaded_file = st.file_uploader("Choose an image file", type=["jpg", "jpeg", "png"])
-            
-            if uploaded_file is not None:
-                # Check if this is a new file upload
-                file_key = f"{uploaded_file.name}_{uploaded_file.size}"
-                if 'last_uploaded_file' not in st.session_state or st.session_state.last_uploaded_file != file_key:
-                    with st.spinner("Processing uploaded image..."):
-                        # Get the file name
-                        file_name = uploaded_file.name
-                        
-                        # Process the image
-                        success = process_image(uploaded_file, file_name)
-                        if success:
-                            st.success("Image processed successfully!")
-                            # Record this file as processed
-                            st.session_state.last_uploaded_file = file_key
-                            # No rerun - let Streamlit handle the flow
-
-# Sidebar for additional controls and inspection details
-with st.sidebar:
-    st.header("Inspection Details")
-    
-    if st.session_state.inspections:
-        st.write(f"Total Inspections: {len(st.session_state.inspections)}")
-        st.write(f"Total Photos: {sum(insp['photo_count'] for insp in st.session_state.inspections)}")
-        
-        # Display a list of inspections with letter identifiers
-        st.subheader("Inspection History")
-        
-        # Sort inspections by date
-        sorted_inspections = sorted(
-            enumerate(st.session_state.inspections), 
-            key=lambda x: x[1]['date'] if isinstance(x[1]['date'], datetime) else datetime.strptime(x[1]['date'], "%Y:%m:%d %H:%M:%S")
-        )
-        
-        # Generate letter identifiers
-        for idx, (i, inspection) in enumerate(sorted_inspections):
-            letter = chr(65 + idx % 26)  # A, B, C, ... Z, then AA, AB, etc.
-            date_str = inspection['date'].strftime("%b %d, %Y") if isinstance(inspection['date'], datetime) else inspection['date']
-            if st.button(f"Inspection {letter}: {date_str} - {inspection['photo_count']} photos", key=f"insp_{i}"):
-                st.session_state.selected_inspection = i
-                st.info(f"Selected inspection {letter} from {date_str}")
+        # We no longer need this since upload is in sidebar
+        # display_image_upload_options(expanded=False)
     else:
-        st.info("No inspections recorded yet. Start by uploading a hive photo.")
-    
-    # Export data option
-    st.subheader("Data Management")
-    if st.button("Export Data (JSON)"):
-        if st.session_state.inspections:
-            # In a real app, this would save to a file
-            st.success("Data would be exported as JSON")
-        else:
-            st.warning("No data to export")
-    
-    # Display cache information
-    st.subheader("Cache Status")
-    if 'url_image_cache' in st.session_state:
-        cache_count = len(st.session_state.url_image_cache)
-        st.write(f"URL Image Cache: {cache_count} images")
-        
-        if cache_count > 0 and st.button("Clear Cache"):
-            st.session_state.url_image_cache = {}
-            st.success("Cache cleared!")
-            st.rerun()
+        # Placeholder for image when none is loaded
+        st.markdown('<div class="image-placeholder"><p>Upload a hive photo using the options in the sidebar</p></div>', unsafe_allow_html=True)
 
-# """
-# # Test image URLs for development and testing:
-# # 
-# # "https://drive.google.com/uc?export=view&id=1aP-MjQ_wGG7RFyO0skn_cu7A2r7bh4iA",  #2024
-# # "https://drive.google.com/uc?export=view&id=1iGytEfHMEXV2fNqI3z6aE49baoOt8W_B"  #2020
-# # "https://drive.google.com/uc?export=view&id=1qbvRpDnseTcq1fd69wKkTUl5VDZMO4Vc"  #2023
-# # "https://drive.google.com/uc?export=view&id=1ikdU2FT2L28hK9xH3Cy0R5BW-atAVd9l"  #2023, same day
-# # "https://drive.google.com/uc?export=view&id=1KpMn4k3FRLeMzca8TJjblsq89sgQSSwN"  #2023, different day
-# """
+    # Render the sidebar (with inspection list and upload options)
+    render_sidebar()
+
+if __name__ == "__main__":
+    main()

@@ -4,9 +4,22 @@
 # git://github.com/dagny099/hivetracker
 # --------------------------------------------------------------------------
 import streamlit as st
+import os
 
+# Create necessary directories if they don't exist
+os.makedirs("data/uploads", exist_ok=True)
+
+# Initialize session state
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
+
+# Set page configuration
+st.set_page_config(
+    page_title="Hive Photo Metadata Tracker",
+    page_icon="🐝",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
 def logout():
     st.subheader("👋🏽 You're now logged out")
@@ -18,22 +31,20 @@ def logout():
 login_page = st.Page("src/login.py", title="Log in", icon=":material/login:")
 logout_page = st.Page(logout, title="Log out", icon=":material/logout:")
 
-dashboard = st.Page("src/app.py", title="First Draft", icon=":material/dashboard:", default=True)
+dashboard = st.Page("src/app.py", title="Dashboard", icon=":material/dashboard:", default=True)
+calendar = st.Page("src/calendar_view.py", title="Calendar", icon=":material/calendar_month:")
+gallery = st.Page("src/gallery_view.py", title="Photo Gallery", icon=":material/photo_library:")
 
-# dashboard = st.Page("app_draft.py", title="NEW Draft", icon=":material/dashboard:", default=True)
-
-calendar = st.Page("src/calendar.py", title="Calendar", icon=":material/calendar_month:")
-
-# bugs = st.Page("tools/bugs.py", title="Trends", icon=":material/data_exploration:")
-# trends = st.Page("tools/trends.py", title="Trends", icon=":material/data_exploration:")
-# history = st.Page("tools/history.py", title="DataFrame Demo", icon=":material/table_chart:")
+# Add more pages as they become available
+# trends = st.Page("src/trends.py", title="Trends", icon=":material/data_exploration:")
+# settings = st.Page("src/settings.py", title="Settings", icon=":material/settings:")
 
 if st.session_state.logged_in:
     pg = st.navigation(
         {
-            "Reports": [dashboard],
-            "Calendar": [calendar],
-            # "Tools": [trends, mapping, query_db, history],
+            "Hive Tracker": [dashboard],
+            "Views": [calendar, gallery],
+            # "Analytics": [trends],
             "Account": [logout_page],
         }
     )

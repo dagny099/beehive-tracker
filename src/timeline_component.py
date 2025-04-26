@@ -8,27 +8,64 @@ import base64
 import requests
 from urllib.parse import urlparse
 
+# Updated initialize_session_state function
 def initialize_session_state():
-    """
-    Initialize required session state variables if they don't exist.
-    Called at the beginning of the app to ensure all necessary 
-    state variables are available.
-    """
-    # Core inspection data storage
+    # Core UI state
+    if 'page' not in st.session_state:
+        st.session_state.page = 'home'
+    
+    # Currently selected items
+    if 'selected_inspection' not in st.session_state:
+        st.session_state.selected_inspection = None
+    if 'selected_photo' not in st.session_state:
+        st.session_state.selected_photo = None
+    if 'view_photo_details' not in st.session_state:
+        st.session_state.view_photo_details = False
+    
+    # Current image state
+    if 'current_image' not in st.session_state:
+        st.session_state.current_image = None
+    if 'filename' not in st.session_state:
+        st.session_state.filename = ""
+    if 'date_taken' not in st.session_state:
+        st.session_state.date_taken = "Unknown"
+    if 'date_source' not in st.session_state:
+        st.session_state.date_source = "Unknown"
+    if 'camera_model' not in st.session_state:
+        st.session_state.camera_model = "Unknown"
+    if 'image_resolution' not in st.session_state:
+        st.session_state.image_resolution = "Unknown"
+    if 'lat' not in st.session_state:
+        st.session_state.lat = None
+    if 'lon' not in st.session_state:
+        st.session_state.lon = None
+    if 'palette_hex' not in st.session_state:
+        st.session_state.palette_hex = ["#CCCCCC", "#DDDDDD", "#EEEEEE"]
+    
+    # Weather info
+    if 'weather_info' not in st.session_state:
+        st.session_state.weather_info = {
+            "weather_temperature_C": None,
+            "weather_precipitation_mm": None,
+            "weather_cloud_cover_percent": None,
+            "weather_wind_speed_kph": None,
+            "weather_code": None,
+            "weather_source": "Not retrieved"
+        }
+    
+    # Vision API results
+    if 'vision_api_results' not in st.session_state:
+        st.session_state.vision_api_results = None
+    
+    # Collection of inspections
     if 'inspections' not in st.session_state:
         st.session_state.inspections = []
     
-    # Current image being processed
-    if 'current_image' not in st.session_state:
-        st.session_state.current_image = None
-    
-    # Selected inspection from the timeline
-    if 'selected_inspection' not in st.session_state:
-        st.session_state.selected_inspection = None
-        
-    # URL image cache
+    # Image caching
     if 'url_image_cache' not in st.session_state:
         st.session_state.url_image_cache = {}
+
+
 
 def create_empty_timeline():
     """
@@ -225,51 +262,57 @@ def process_url_image(img_url):
         bool: True if processing was successful
     """
     try:
-        # Generate a hash of the URL for cache key
-        import hashlib
-        url_hash = hashlib.md5(img_url.encode()).hexdigest()
-        
-        # Check if this URL is already cached
-        if url_hash in st.session_state.url_image_cache:
-            st.info("Loading image from cache")
-            cache_data = st.session_state.url_image_cache[url_hash]
+        # Check cache first
+        if 'url_image_cache' in st.session_state and url in st.session_state.url_image_cache:
+            # Use cached image data
+            image_data = st.session_state.url_image_cache[url]
             
-            # Extract cached data
-            img_file = io.BytesIO(cache_data['image_data'])
-            img_name = cache_data['filename']
-            
+            # Extract filename from URL
+            filename = url.split('/')[-1]
+            if '?' in filename:
+                filename = filename.split('?')[0]
+            if not filename:
+                filename = "image_from_url.jpg"
+                
             # Process the cached image
-            return process_image(img_file, img_name)
-        
-        # Not in cache, proceed with download
-        st.info("Downloading image from URL")
-        
-        # Parse URL and extract filename
-        parsed_url = urlparse(img_url)
-        img_name = parsed_url.path.split('/')[-1]
-        if not img_name or '.' not in img_name:
-            img_name = f"image_{url_hash}.jpg"
-        
-        # Download image
-        response = requests.get(img_url)
-        
-        # Cache the downloaded image data
-        image_data = response.content
-        st.session_state.url_image_cache[url_hash] = {
-            'image_data': image_data,
-            'filename': img_name,
-            'url': img_url,
-            'timestamp': datetime.now().isoformat()
-        }
-        
-        # Create a BytesIO object from the cached data
-        img_file = io.BytesIO(image_data)
-        
-        # Process the image
-        return process_image(img_file, img_name)
+            photo_data = process_image_file(io.BytesIO(image_data), filename)
+            
+            # Set refresh flag
+            st.session_state.needs_refresh = True
+            
+            return photo_data
+        else:
+            # Download the image
+            response = requests.get(url)
+            if response.status_code == 200:
+                # Get image data
+                image_data = response.content
+                
+                # Cache the image data
+                if 'url_image_cache' not in st.session_state:
+                    st.session_state.url_image_cache = {}
+                st.session_state.url_image_cache[url] = image_data
+                
+                # Extract filename from URL
+                filename = url.split('/')[-1]
+                if '?' in filename:
+                    filename = filename.split('?')[0]
+                if not filename:
+                    filename = "image_from_url.jpg"
+                
+                # Process the downloaded image
+                photo_data = process_image_file(io.BytesIO(image_data), filename)
+                
+                # Set refresh flag
+                st.session_state.needs_refresh = True
+                
+                return photo_data
+            else:
+                st.error(f"Failed to download image. Status code: {response.status_code}")
+                return None
     except Exception as e:
-        st.error(f"Error processing image from URL: {e}")
-        return False
+        st.error(f"Error processing URL image: {e}")
+        return None
 
 def extract_exif(img_file):
     """
