@@ -41,3 +41,4 @@ notebooks/
 .streamlit
 tests
 src/app_draft.py
+data/uploads
