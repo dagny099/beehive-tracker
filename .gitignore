@@ -42,3 +42,4 @@ notebooks/
 tests
 src/app_draft.py
 data/uploads
+.env
