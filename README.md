@@ -126,21 +126,71 @@ The application employs a multi-layered architecture designed for performance an
 </div>
 
 
-## 🔄 Project Structure - to edit
+## 🔄 Project Structure
 
 ```
-hive-photo-tracker/
-├── docs/                # Documentation (in progress)
-├── src/                 # Main code directory
-├── run_tracker.py       # Entry point for the multi-pg application
-├── requirements.txt     # Dependencies
-├── Dockerfile           # Container definition
-└── deploy.sh            # Deployment script
+beehive-tracker/
+├── 📁 docs/                          # Documentation and diagrams
+│   ├── architecture-*.png            # System architecture diagrams
+│   ├── diagram_flow.png              # User workflow diagram
+│   └── tech-stack-depiction.png      # Technology stack visualization
+├── 📁 src/                           # Main application source code
+│   ├── 📄 app.py                     # Main dashboard page
+│   ├── 📄 login.py                   # Authentication system
+│   ├── 📄 calendar_view.py           # Calendar timeline interface
+│   ├── 📄 gallery_view.py            # Photo gallery interface
+│   ├── 📄 app_components.py          # Reusable UI components
+│   ├── 📄 timeline_component.py      # Timeline visualization logic
+│   ├── 📄 ui_components.py           # Core UI element library
+│   ├── 📄 data_io.py                 # Data import/export utilities
+│   ├── 📁 api_services/              # External API integrations
+│   │   ├── 📄 vision.py              # Google Cloud Vision API client
+│   │   └── 📄 weather.py             # Weather data API integration
+│   ├── 📁 utils/                     # Utility functions and helpers
+│   │   ├── 📄 image_processor.py     # Image analysis and EXIF extraction
+│   │   ├── 📄 data_handler.py        # Data processing and validation
+│   │   └── 📄 session_manager.py     # Session state management
+│   └── 📄 beehive_analyzer_app.py    # Experimental analysis features
+├── 📁 data/                          # Application data directory
+│   └── 📁 uploads/                   # User-uploaded images storage
+├── 📁 assets/                        # Static assets and resources
+├── 📄 run_tracker.py                 # 🚀 Application entry point (multi-page)
+├── 📄 requirements.txt               # Python dependencies (pip)
+├── 📄 pyproject.toml                 # Python project config (Poetry)
+├── 📄 poetry.lock                    # Locked dependency versions
+├── 📄 Dockerfile                     # Container definition for deployment
+├── 📄 deploy.sh                      # Cloud Run deployment script
+├── 📄 DEPLOYMENT.md                  # Comprehensive deployment guide
+├── 📄 DOCUMENTATION_AND_TESTING_PLAN.md  # Development roadmap
+├── 📁 .venv/                         # Python virtual environment
+├── 📄 .env                           # Environment variables (local)
+├── 📄 .gitignore                     # Git ignore patterns
+└── 📊 *.ipynb                        # Jupyter notebooks for analysis
+    ├── GCP Computer Vision Deep Dive.ipynb    # Vision API exploration
+    └── Generate Visualizations for Post.ipynb # Data visualization experiments
 ```
+
+### 📋 Key Components Overview
+
+| Component | Purpose | Technology |
+|-----------|---------|------------|
+| **Frontend** | Multi-page Streamlit web application | Streamlit, Plotly |
+| **Image Processing** | EXIF extraction, color analysis | PIL, ColorThief |
+| **Computer Vision** | Beehive analysis, object detection | Google Cloud Vision API |
+| **Weather Integration** | Environmental context data | Open-Meteo API |
+| **Data Storage** | File-based with JSON/CSV export | Pandas, JSON |
+| **Deployment** | Containerized cloud deployment | Docker, Google Cloud Run |
+
+## 📚 Documentation
+
+For comprehensive setup and deployment information, see:
+
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Complete deployment guide from local development to production
+- **[DOCUMENTATION_AND_TESTING_PLAN.md](./DOCUMENTATION_AND_TESTING_PLAN.md)** - Development roadmap and testing strategy
 
 ## 🚢 Deployment
 
-My app is deployed to Google Cloud Run using Docker (which hasn't been migrated to use poetry yet):
+The app is deployed to Google Cloud Run using Docker. For detailed deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md).
 
 1. Update the `PROJECT_ID` in `deploy.sh` with your GCP project ID  
 2. Make the deploy script executable:    
