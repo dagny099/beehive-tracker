@@ -15,6 +15,7 @@ try:
     S3_AVAILABLE = True
 except ImportError:
     S3_AVAILABLE = False
+    logging.warning("S3StorageProvider not available - install boto3 for S3 support")
 
 try:
     from .gcs_provider import GCSStorageProvider  
