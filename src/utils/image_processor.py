@@ -282,16 +282,15 @@ def extract_color_palette(img, count=5):
         return ["#CCCCCC", "#DDDDDD", "#EEEEEE", "#EFEFEF", "#F5F5F5"]
 
 def process_image_file(image_file, filename):
-    """Process an uploaded image file and save it locally"""
+    """Process an uploaded image file using storage abstraction layer"""
     try:
-        # Create uploads directory if it doesn't exist
-        upload_dir = os.path.join("data", "uploads")
-        os.makedirs(upload_dir, exist_ok=True)
-        
-        # Generate a unique filename to avoid collisions
-        timestamp = int(datetime.now().timestamp())
-        safe_filename = f"{timestamp}_{filename}"
-        file_path = os.path.join(upload_dir, safe_filename)
+        # Import storage integration (with fallback)
+        try:
+            from utils.storage_integration import upload_image_with_storage
+            storage_available = True
+        except ImportError:
+            storage_available = False
+            logging.warning("Storage integration not available, using legacy upload")
         
         # Read file content
         if hasattr(image_file, 'seek'):
@@ -301,10 +300,6 @@ def process_image_file(image_file, filename):
             file_content = image_file.read()
         else:
             file_content = image_file
-            
-        # Save to disk
-        with open(file_path, 'wb') as f:
-            f.write(file_content)
         
         # Reset file pointer for image processing
         if hasattr(image_file, 'seek'):
@@ -321,7 +316,7 @@ def process_image_file(image_file, filename):
         resolution = get_image_resolution(img)
         
         # Extract EXIF data using multi-library approach
-        exif_data = extract_exif_data(img, file_path=file_path, file_bytes=file_content)
+        exif_data = extract_exif_data(img, file_bytes=file_content)
         
         # Extract date taken
         date_taken = "Unknown"
@@ -353,6 +348,57 @@ def process_image_file(image_file, filename):
         # Extract color palette
         palette_hex = extract_color_palette(img)
         
+        # Calculate file size in MB
+        file_size_mb = len(file_content) / (1024 * 1024)
+        
+        # Prepare metadata for storage
+        metadata = {
+            'original_filename': filename,
+            'date_taken': date_taken,
+            'camera_model': camera_model,
+            'resolution': resolution,
+            'file_size_mb': str(file_size_mb),
+            'lat': str(lat) if lat else None,
+            'lon': str(lon) if lon else None,
+            'upload_timestamp': datetime.now().isoformat()
+        }
+        
+        # Upload using storage abstraction or fallback
+        if storage_available:
+            # Get user context for organized storage
+            user_id = getattr(st.session_state, 'user_id', 'default_user')
+            inspection_id = getattr(st.session_state, 'current_inspection_id', None)
+            
+            upload_result = upload_image_with_storage(
+                image_data=file_content,
+                filename=filename,
+                user_id=user_id,
+                inspection_id=inspection_id,
+                metadata=metadata
+            )
+            
+            if upload_result.get("success"):
+                file_path = upload_result.get("file_path", "")
+                storage_provider = upload_result.get("provider", "unknown")
+                
+                st.info(f"✅ Image uploaded using {storage_provider} storage")
+            else:
+                st.error(f"Upload failed: {upload_result.get('error', 'Unknown error')}")
+                return None
+        else:
+            # Legacy local storage fallback
+            upload_dir = os.path.join("data", "uploads")
+            os.makedirs(upload_dir, exist_ok=True)
+            
+            timestamp = int(datetime.now().timestamp())
+            safe_filename = f"{timestamp}_{filename}"
+            file_path = os.path.join(upload_dir, safe_filename)
+            
+            with open(file_path, 'wb') as f:
+                f.write(file_content)
+            
+            st.info("📁 Image saved using local storage")
+        
         # Set session state variables
         st.session_state.current_image = file_content
         st.session_state.filename = filename
@@ -363,9 +409,6 @@ def process_image_file(image_file, filename):
         st.session_state.lat = lat
         st.session_state.lon = lon
         st.session_state.palette_hex = palette_hex
-        
-        # Calculate file size in MB
-        file_size_mb = len(file_content) / (1024 * 1024)
         st.session_state.image_size_mb = file_size_mb
         
         # Prepare photo data object
@@ -378,7 +421,8 @@ def process_image_file(image_file, filename):
             'color_palette': palette_hex,
             'file_size_mb': file_size_mb,
             'lat': lat,
-            'lon': lon
+            'lon': lon,
+            'storage_metadata': metadata
         }
         
         # Add more EXIF data if available
@@ -401,8 +445,10 @@ def process_image_file(image_file, filename):
                 photo_data['focal_length'] = f"{focal_length[0] / focal_length[1]} mm"
         
         return photo_data
+        
     except Exception as e:
         st.error(f"Error processing image: {e}")
+        logging.error(f"Image processing error: {e}")
         return None
 
 def process_url_image(url):
