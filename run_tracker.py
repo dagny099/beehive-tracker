@@ -5,6 +5,10 @@
 # --------------------------------------------------------------------------
 import streamlit as st
 import os
+import sys
+
+# Add src to path for imports
+sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
 # Create necessary directories if they don't exist
 os.makedirs("data/uploads", exist_ok=True)
@@ -34,6 +38,7 @@ logout_page = st.Page(logout, title="Log out", icon=":material/logout:")
 dashboard = st.Page("src/app.py", title="Dashboard", icon=":material/dashboard:", default=True)
 calendar = st.Page("src/calendar_view.py", title="Calendar", icon=":material/calendar_month:")
 gallery = st.Page("src/gallery_view.py", title="Photo Gallery", icon=":material/photo_library:")
+storage = st.Page("src/pages/Storage_Management.py", title="Storage", icon=":material/cloud:")
 
 # Add more pages as they become available
 # trends = st.Page("src/trends.py", title="Trends", icon=":material/data_exploration:")
@@ -44,6 +49,7 @@ if st.session_state.logged_in:
         {
             "Hive Tracker": [dashboard],
             "Views": [calendar, gallery],
+            "Management": [storage],
             # "Analytics": [trends],
             "Account": [logout_page],
         }
