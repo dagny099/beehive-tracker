@@ -113,6 +113,9 @@ drafts/
 src/app_draft.py
 experimental/
 
+# MkDocs generated site
+site/
+
 # Monitoring and logs
 logs/
 *.log
