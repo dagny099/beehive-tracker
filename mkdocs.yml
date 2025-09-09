@@ -1,0 +1,139 @@
+site_name: Beehive Photo Metadata Tracker
+site_description: Transform your beehive inspection photos into structured, searchable knowledge
+site_author: Barbara H. Smith
+site_url: https://hivetracker.barbhs.com
+
+# Repository information
+repo_name: beehive-tracker
+repo_url: https://github.com/username/beehive-tracker
+edit_uri: edit/main/docs_site/docs/
+
+# Documentation directory
+docs_dir: docs_site/docs
+site_dir: docs_site/site
+
+# Copyright
+copyright: Copyright &copy; 2024 Barbara H. Smith
+
+# Configuration
+theme:
+  name: material
+  palette:
+    # Palette toggle for light mode
+    - scheme: default
+      primary: amber
+      accent: deep orange
+      toggle:
+        icon: material/brightness-7 
+        name: Switch to dark mode
+    # Palette toggle for dark mode  
+    - scheme: slate
+      primary: amber
+      accent: deep orange
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  font:
+    text: Roboto
+    code: Roboto Mono
+  icon:
+    logo: material/bee
+    repo: fontawesome/brands/github
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.path
+    - navigation.indexes
+    - navigation.top
+    - search.highlight
+    - search.suggest
+    - search.share
+    - content.action.edit
+    - content.action.view
+    - content.code.copy
+    - content.code.annotate
+
+# Plugins
+plugins:
+  - search:
+      lang: en
+  - mermaid2:
+      version: 10.6.1
+
+# Extensions
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: username
+      repo: beehive-tracker
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+  - pymdownx.snippets:
+      base_path: docs_site/docs/includes
+
+# Page tree navigation
+nav:
+  - Home: index.md
+  - Overview: overview.md
+  - Getting Started:
+    - getting-started/index.md
+    - Installation: getting-started/installation.md
+    - Quick Start: getting-started/quick-start.md
+  - User Guide:
+    - user-guide/index.md
+  - API Reference:
+    - api-reference/index.md
+    - Vision API: api-reference/vision.md
+  - Architecture: architecture.md
+
+# Extra CSS and JS
+extra_css:
+  - stylesheets/extra.css
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+# Social links
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/username/beehive-tracker
+    - icon: fontawesome/solid/globe
+      link: https://hivetracker.barbhs.com

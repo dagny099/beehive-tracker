@@ -7,3 +7,8 @@ requests==2.31.0
 google-cloud-vision==3.7.1
 python-dotenv==1.0.0
 streamlit-calendar==1.2.1
+
+# MkDocs dependencies
+mkdocs==1.5.3
+mkdocs-material==9.5.3
+mkdocs-mermaid2-plugin==1.1.1

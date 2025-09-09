@@ -1,0 +1,232 @@
+/* Custom styles for Beehive Tracker documentation */
+
+/* Hero section styling */
+.hero-section {
+    background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+    padding: 2rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    border-left: 4px solid var(--md-accent-fg-color);
+}
+
+/* Custom cards with hover effects */
+.grid.cards > .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transition: all 0.2s ease;
+}
+
+/* Beehive-themed color palette */
+:root {
+    --bee-yellow: #ffd54f;
+    --bee-orange: #ffb74d;
+    --honeycomb: #fff3c4;
+    --hive-brown: #8d6e63;
+}
+
+/* Custom admonition styles */
+.md-typeset .admonition.tip {
+    border-left-color: var(--bee-yellow);
+}
+
+.md-typeset .admonition.tip > .admonition-title {
+    background-color: rgba(255, 213, 79, 0.1);
+}
+
+/* Code block enhancements */
+.md-typeset .highlight .filename {
+    background: var(--bee-orange);
+    color: white;
+    padding: 0.5rem 1rem;
+    margin: 0;
+    font-weight: bold;
+    border-radius: 4px 4px 0 0;
+}
+
+/* Navigation enhancements */
+.md-nav__title {
+    font-weight: 600;
+}
+
+/* Custom button styles */
+.md-button {
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+.md-button--primary {
+    background: linear-gradient(45deg, var(--bee-yellow), var(--bee-orange));
+    border: none;
+}
+
+.md-button--primary:hover {
+    background: linear-gradient(45deg, var(--bee-orange), #ff9800);
+}
+
+/* Table styling */
+.md-typeset table:not([class]) {
+    border-collapse: collapse;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.md-typeset table:not([class]) th {
+    background: var(--honeycomb);
+    font-weight: 600;
+}
+
+.md-typeset table:not([class]) tr:hover {
+    background-color: rgba(255, 243, 196, 0.5);
+}
+
+/* Mermaid diagram enhancements */
+.mermaid {
+    text-align: center;
+    margin: 1.5rem 0;
+}
+
+/* Custom grid layouts */
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+}
+
+.feature-card {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    transition: all 0.2s ease;
+}
+
+.feature-card:hover {
+    border-color: var(--bee-orange);
+    box-shadow: 0 2px 8px rgba(255, 183, 77, 0.2);
+}
+
+/* Progress indicators */
+.progress-bar {
+    background: #f0f0f0;
+    border-radius: 10px;
+    padding: 2px;
+    margin: 0.5rem 0;
+}
+
+.progress-fill {
+    background: linear-gradient(90deg, var(--bee-yellow), var(--bee-orange));
+    height: 20px;
+    border-radius: 8px;
+    transition: width 0.3s ease;
+}
+
+/* API documentation enhancements */
+.api-method {
+    background: #f8f9fa;
+    border-left: 3px solid var(--bee-orange);
+    padding: 1rem;
+    margin: 1rem 0;
+    border-radius: 0 4px 4px 0;
+}
+
+.api-method h4 {
+    margin-top: 0;
+    color: var(--hive-brown);
+}
+
+/* Status badges */
+.status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-right: 0.5rem;
+}
+
+.status-completed {
+    background: #c8e6c9;
+    color: #2e7d32;
+}
+
+.status-in-progress {
+    background: #fff3c4;
+    color: #f57f17;
+}
+
+.status-planned {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+/* Mobile responsiveness */
+@media screen and (max-width: 768px) {
+    .hero-section {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .feature-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        margin: 1rem 0;
+    }
+    
+    .md-typeset table:not([class]) {
+        font-size: 0.8rem;
+    }
+}
+
+/* Dark mode adjustments */
+[data-md-color-scheme="slate"] {
+    .hero-section {
+        background: linear-gradient(135deg, #2d2d2d 0%, #3d3d3d 100%);
+        border-left-color: var(--bee-yellow);
+    }
+    
+    .feature-card {
+        background: var(--md-code-bg-color);
+        border-color: var(--md-default-fg-color--lightest);
+    }
+    
+    .api-method {
+        background: var(--md-code-bg-color);
+    }
+}
+
+/* Animation classes */
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.slide-in {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(-20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* Custom icons for beehive context */
+.icon-bee::before {
+    content: "🐝";
+    margin-right: 0.5rem;
+}
+
+.icon-hive::before {
+    content: "🍯";
+    margin-right: 0.5rem;
+}
+
+.icon-analysis::before {
+    content: "📊";
+    margin-right: 0.5rem;
+}
