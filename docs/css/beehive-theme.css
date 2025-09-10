@@ -1,0 +1,218 @@
+/* Beehive Tracker Custom Theme */
+
+:root {
+  /* Beehive Brand Colors */
+  --bee-primary: #ffa000;        /* amber/honey */
+  --bee-secondary: #8d6e63;      /* brown/wood */
+  --bee-accent: #ffb74d;         /* light honey */
+  --bee-dark: #e65100;           /* darker amber */
+  --bee-light: #fff3c4;          /* cream/wax */
+  
+  /* Hexagon Pattern Colors */
+  --hex-primary: #ffc107;
+  --hex-secondary: #ff8f00;
+  --hex-subtle: rgba(255, 193, 7, 0.1);
+}
+
+/* Header customization with beehive branding */
+.md-header {
+  background: linear-gradient(135deg, var(--bee-primary) 0%, var(--bee-dark) 100%);
+  box-shadow: 0 2px 8px rgba(255, 160, 0, 0.3);
+}
+
+.md-header__title {
+  font-weight: 600;
+  color: white;
+}
+
+.md-header__title::before {
+  content: "🐝 ";
+  font-size: 1.2em;
+  margin-right: 0.5rem;
+}
+
+/* Navigation with honeycomb patterns */
+.md-nav__title {
+  position: relative;
+  color: var(--bee-primary);
+  font-weight: 600;
+}
+
+.md-nav__title::before {
+  content: "";
+  position: absolute;
+  left: -1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  background: var(--bee-accent);
+  clip-path: polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%);
+}
+
+/* Content area with subtle hexagon patterns */
+.md-content {
+  background-image: 
+    radial-gradient(circle at 25% 25%, var(--hex-subtle) 2px, transparent 2px),
+    radial-gradient(circle at 75% 75%, var(--hex-subtle) 1px, transparent 1px);
+  background-size: 60px 60px, 40px 40px;
+}
+
+/* Enhanced admonitions with beehive styling */
+.admonition.success {
+  border-left: 4px solid var(--bee-primary);
+  background: linear-gradient(90deg, var(--bee-light) 0%, rgba(255, 243, 196, 0.3) 100%);
+}
+
+.admonition.success .admonition-title::before {
+  content: "🍯 ";
+}
+
+.admonition.info {
+  border-left: 4px solid var(--bee-secondary);
+  background: linear-gradient(90deg, #f5f3f0 0%, rgba(245, 243, 240, 0.3) 100%);
+}
+
+.admonition.info .admonition-title::before {
+  content: "🔍 ";
+}
+
+/* Architecture diagrams with honeycomb styling */
+.architecture-diagram {
+  background: linear-gradient(135deg, var(--bee-light) 0%, white 100%);
+  border: 2px solid var(--bee-accent);
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.architecture-diagram::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 40px;
+  height: 40px;
+  background: var(--bee-accent);
+  clip-path: polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%);
+  opacity: 0.7;
+}
+
+/* API code blocks with honey-inspired styling */
+.api-example {
+  background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+  border-left: 4px solid var(--bee-primary);
+  border-radius: 8px;
+  position: relative;
+}
+
+.api-example::before {
+  content: "⚡ API";
+  position: absolute;
+  top: 0.5rem;
+  right: 1rem;
+  background: var(--bee-primary);
+  color: white;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Mermaid diagrams with beehive color scheme */
+.mermaid .node rect {
+  fill: var(--bee-light) !important;
+  stroke: var(--bee-primary) !important;
+  stroke-width: 2px !important;
+}
+
+.mermaid .node .label {
+  color: var(--bee-dark) !important;
+  font-weight: 600 !important;
+}
+
+.mermaid .edgePath .path {
+  stroke: var(--bee-secondary) !important;
+  stroke-width: 2px !important;
+}
+
+/* Buttons and links with beehive styling */
+.md-button {
+  background: linear-gradient(135deg, var(--bee-primary) 0%, var(--bee-dark) 100%);
+  border: none;
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.md-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 160, 0, 0.4);
+}
+
+/* Footer with beehive branding */
+.md-footer {
+  background: linear-gradient(135deg, var(--bee-secondary) 0%, #5d4037 100%);
+}
+
+.md-footer__title {
+  color: var(--bee-light);
+}
+
+/* Custom icons for different sections */
+.md-nav__item[data-md-level="1"] > .md-nav__link[href*="overview"]::before {
+  content: "🌻 ";
+  margin-right: 0.5rem;
+}
+
+.md-nav__item[data-md-level="1"] > .md-nav__link[href*="architecture"]::before {
+  content: "🏗️ ";
+  margin-right: 0.5rem;
+}
+
+.md-nav__item[data-md-level="1"] > .md-nav__link[href*="api"]::before {
+  content: "⚙️ ";
+  margin-right: 0.5rem;
+}
+
+.md-nav__item[data-md-level="1"] > .md-nav__link[href*="getting-started"]::before {
+  content: "🚀 ";
+  margin-right: 0.5rem;
+}
+
+/* Responsive hexagon decorations */
+@media screen and (min-width: 1200px) {
+  .md-sidebar--primary::before {
+    content: "";
+    position: fixed;
+    top: 20%;
+    left: -20px;
+    width: 60px;
+    height: 60px;
+    background: var(--hex-subtle);
+    clip-path: polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%);
+    z-index: -1;
+  }
+  
+  .md-sidebar--secondary::after {
+    content: "";
+    position: fixed;
+    top: 40%;
+    right: -30px;
+    width: 40px;
+    height: 40px;
+    background: var(--hex-subtle);
+    clip-path: polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%);
+    z-index: -1;
+  }
+}
+
+/* Loading animations with bee theme */
+@keyframes buzz {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+.md-header__title:hover::before {
+  animation: buzz 0.5s ease-in-out;
+}

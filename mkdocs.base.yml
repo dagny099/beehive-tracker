@@ -7,10 +7,27 @@ theme:
   font:
     text: Inter
     code: JetBrains Mono
+  palette:
+    # Beehive theme colors
+    - scheme: default
+      primary: amber
+      accent: orange
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate 
+      primary: amber
+      accent: orange
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
   features:
     - content.code.copy
     - content.tabs.link
     - toc.integrate
+    - navigation.instant
+    - navigation.tracking
+    - navigation.top
 
 markdown_extensions:
   - admonition
@@ -18,8 +35,13 @@ markdown_extensions:
   - footnotes
   - md_in_html
   - pymdownx.details
-  - pymdownx.superfences
-  - pymdownx.tabbed
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg

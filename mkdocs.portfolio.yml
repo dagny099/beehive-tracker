@@ -10,6 +10,11 @@ theme:
     - navigation.top
     - content.action.edit
     - content.action.view
+    - navigation.expand
+    - navigation.tabs
+
+extra_css:
+  - css/beehive-theme.css
 
 plugins:
   - search

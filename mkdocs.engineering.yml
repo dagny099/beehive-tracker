@@ -24,13 +24,11 @@ plugins:
 # Enable Mermaid for rich architecture diagrams
 extra_javascript:
   - https://unpkg.com/mermaid@10.6.1/dist/mermaid.min.js
+  - js/mermaid-init.js
 
-markdown_extensions:
-  - pymdownx.superfences:
-      custom_fences:
-        - name: mermaid
-          class: mermaid
-          format: !!python/name:pymdownx.superfences.fence_code_format
+extra_css:
+  - css/extra.css
+  - css/beehive-theme.css
 
 # Keep heavier JS/CSS here if you actually need it (e.g., MathJax):
 # extra_javascript:
