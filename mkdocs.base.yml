@@ -1,0 +1,27 @@
+site_name: Beehive Tracker — Docs
+site_description: Shared base settings for Beehive Tracker documentation.
+repo_url: https://github.com/username/beehive-tracker
+
+theme:
+  name: material
+  font:
+    text: Inter
+    code: JetBrains Mono
+  features:
+    - content.code.copy
+    - content.tabs.link
+    - toc.integrate
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - footnotes
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+# Keep extras minimal in the base; add heavy JS only in engineering if needed.

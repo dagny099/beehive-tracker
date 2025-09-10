@@ -1,0 +1,55 @@
+INHERIT: mkdocs.base.yml
+
+site_description: Engineering docs for Beehive Tracker — API, ADRs, notebooks.
+# site_url: https://barbhs.com/beehive-tracker/engineering/  # optional; safe to omit
+
+plugins:
+  - search
+  - tags
+  # Enable when plugin is installed:
+  # - git-revision-date-localized:
+  #     fallback_to_build_date: true
+  #     type: date
+  #     timezone: America/Chicago
+  # Enable only if Python modules exist for API docs:
+  # - mkdocstrings:
+  #     handlers:
+  #       python:
+  #         options:
+  #           docstring_style: google
+  #           show_root_heading: true
+  # - mkdocs-jupyter  # Enable if notebooks exist
+  # - mkdocs-minify-plugin  # Optional performance optimization
+
+# Enable Mermaid for rich architecture diagrams
+extra_javascript:
+  - https://unpkg.com/mermaid@10.6.1/dist/mermaid.min.js
+
+markdown_extensions:
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+# Keep heavier JS/CSS here if you actually need it (e.g., MathJax):
+# extra_javascript:
+#   - javascripts/mathjax.js
+#   - https://polyfill.io/v3/polyfill.min.js?features=es6
+#   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+nav:
+  - Home: index.md
+  - Overview: overview.md
+  - Get Started:
+      - Overview: getting-started/index.md
+      - Quick Start: getting-started/quick-start.md
+      - Installation: getting-started/installation.md
+  - Architecture: architecture.md
+  - User Guide: user-guide/index.md
+  - API Documentation:
+      - API Overview: api/README.md
+      - Vision API: api/vision_api.md
+      - Reference:
+          - API Reference: api-reference/index.md
+          - Vision Service: api-reference/vision.md

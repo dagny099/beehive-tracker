@@ -1,0 +1,39 @@
+INHERIT: mkdocs.base.yml
+
+site_description: Portfolio front door for Beehive Tracker — concise story + CTAs.
+# site_url: https://barbhs.com/beehive-tracker/portfolio/   # optional; safe to omit
+
+theme:
+  features:
+    - navigation.instant
+    - navigation.sections
+    - navigation.top
+    - content.action.edit
+    - content.action.view
+
+plugins:
+  - search
+  - tags
+  # Enable when dependencies installed: pip install "mkdocs-material[imaging]"
+  # - social:  # For LinkedIn/social card generation
+  #     cards_layout_options:
+  #       background_color: "#1976d2"
+  # - blog   # enable only if you have posts
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/username/beehive-tracker
+      name: Repository
+  generator: false  # Hide "Made with Material for MkDocs" for cleaner portfolio look
+
+nav:
+  - Home: index.md
+  - Overview: overview.md
+  - Get Started:
+      - Overview: getting-started/index.md
+      - Quick Start: getting-started/quick-start.md
+      - Installation: getting-started/installation.md
+  - Architecture Overview: architecture.md
+  - Gallery:
+      - User Guide: user-guide/index.md
