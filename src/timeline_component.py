@@ -160,7 +160,23 @@ def update_timeline_with_inspections():
     # Create the figure
     fig = go.Figure()
     
-    # Add inspection points with text labels
+    # Add connecting line for timeline continuity
+    fig.add_trace(
+        go.Scatter(
+            x=inspections_df['date'],
+            y=[1] * len(inspections_df),
+            mode='lines',
+            line=dict(
+                color='rgba(212, 160, 23, 0.6)',  # Honey color with transparency
+                width=3,
+                dash='solid'
+            ),
+            hoverinfo='skip',
+            showlegend=False
+        )
+    )
+
+    # Add inspection points with text labels on top of the line
     fig.add_trace(
         go.Scatter(
             x=inspections_df['date'],
@@ -170,16 +186,17 @@ def update_timeline_with_inspections():
             textposition='middle center',  # Center text on markers
             textfont=dict(
                 family='Arial, sans-serif',
-                size=10,
-                color='rgba(0, 0, 0, 0.8)'
+                size=11,
+                color='rgba(139, 69, 19, 0.9)',  # Darker brown for better contrast
+                weight='bold'
             ),
             marker=dict(
-                size=22,  # Larger to accommodate text
-                symbol='circle',  # Circle works better for text than hexagon
+                size=28,  # Larger to accommodate text and stand out
+                symbol='hexagon',  # Hexagon for honeycomb theme
                 color='#FFC300',  # Honey color
-                line=dict(width=1, color='#B38600')
+                line=dict(width=3, color='#D4A017')  # Stronger border
             ),
-            hovertemplate='<b>Inspection %{text}: %{x|%b %d, %Y}</b><br>Photos: %{customdata}<extra></extra>',
+            hovertemplate='<b>Inspection %{text}: %{x|%b %d, %Y}</b><br>Photos: %{customdata}<br><i>Click to view details</i><extra></extra>',
             customdata=inspections_df['photo_count'],
             showlegend=False
         )
@@ -210,7 +227,7 @@ def update_timeline_with_inspections():
         )
     )
     
-    # Add date range selector for timeline navigation
+    # Add date range selector for timeline navigation with honey theme
     fig.update_layout(
         xaxis=dict(
             rangeselector=dict(
@@ -221,8 +238,11 @@ def update_timeline_with_inspections():
                     dict(count=1, label="1y", step="year", stepmode="backward"),
                     dict(step="all")
                 ]),
-                bgcolor='rgba(150, 150, 150, 0.2)',
-                font=dict(color='rgba(255, 255, 255, 0.8)')
+                bgcolor='rgba(255, 195, 0, 0.15)',  # Honey-colored background
+                bordercolor='#D4A017',
+                borderwidth=1,
+                font=dict(color='#8B4513', size=11),  # Brown text
+                activecolor='#FFC300'  # Active button color
             )
         )
     )
@@ -233,11 +253,24 @@ def render_timeline():
     """
     Render the timeline in the Streamlit app.
     This is the main function to call from app.py to display the timeline.
-    
+
     Returns:
         object: The Streamlit plot chart object
     """
-    st.markdown("### 📅 Hive Inspection Timeline")
+    # Timeline header with honeycomb styling
+    st.markdown("""
+    <div style="
+        background: linear-gradient(90deg, #FFC300 0%, #FFE066 50%, #FFC300 100%);
+        padding: 12px 20px;
+        border-radius: 25px;
+        border: 2px solid #D4A017;
+        margin-bottom: 15px;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(255, 195, 0, 0.3);
+    ">
+    <h3 style="color: #8B4513; margin: 0; text-shadow: 1px 1px 2px rgba(255,255,255,0.8);">📅 Hive Inspection Timeline</h3>
+    </div>
+    """, unsafe_allow_html=True)
     
     # Use the appropriate timeline based on whether inspections exist
     if st.session_state.inspections:

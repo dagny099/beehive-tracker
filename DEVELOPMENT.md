@@ -1,9 +1,9 @@
-# Hive Photo Metadata Tracker — DEVELOPMENT Notes
+# Beehive Photo Metadata Tracker — DEVELOPMENT Notes
 
 **Mission (why):** Explore whether we can turn hive inspection photos into structured metadata (features, weather context, timelines) to give beekeepers evidence-based insights.  
 **Date range:** 2025 · **Status:** Active (prototype phase)  
 **Live app:** _TBD — served via Streamlit on EC2_  
-**Primary tech:** Streamlit, Python, Google Cloud Vision API, Weather API integration, CSV/JSON export  
+**Primary tech:** Streamlit, Python, Google Cloud Vision API, Open-Meteo API integration, CSV/JSON export  
 **Constraints:** Small dataset of personal hive photos; single-developer timebox; deployable on low-cost EC2
 
 ---
@@ -18,7 +18,7 @@ flowchart LR
   Storage --> Local[Local Provider]
   Storage --> S3[S3 Cloud Provider]
   ETL --> CV[Vision API (labels, colors, annotations)]
-  ETL --> WX[Weather API (by timestamp/location)]
+  ETL --> WX[Open-Meteo API (by timestamp/location)]
   CV --> DB[(Metadata CSV/JSON)]
   WX --> DB
   DB --> Graph[Neo4j / NetworkX for relationships]
@@ -38,7 +38,7 @@ flowchart LR
 
 | Decision | Options considered | Why chosen | Impact | Revisit? |
 |----------|--------------------|------------|--------|----------|
-| **Vision API** | OpenCV, TorchVision, Google Cloud Vision | Vision API gave faster prototyping + labels beyond simple CV | Enabled early demo | Later explore on-prem for cost |
+| **Vision API** | OpenCV, TorchVision, Google Cloud Vision API | Google Cloud Vision API gave faster prototyping + labels beyond simple CV | Enabled early demo | Later explore on-prem for cost |
 | **Metadata format** | SQLite, JSON, CSV | CSV/JSON simpler for analysis + sharing | Lightweight, transparent | Add DB if scaling |
 | **Graph layer** | NetworkX, Neo4j | Neo4j aligns with portfolio goal (graphs, query power) | Showcase graph skills | Keep NetworkX fallback |
 | **Storage architecture** | Direct local/cloud coupling, Storage abstraction layer | Abstraction layer for provider switching + migration | Clean separation, zero breaking changes | Monitor performance overhead |
@@ -46,13 +46,13 @@ flowchart LR
 
 ### Experiment log (selected)
 
-- **H1:** Cloud Vision API provides meaningful labels for hive inspections.  
+- **H1:** Google Cloud Vision API provides meaningful labels for hive inspections.  
   **Result:** Labels capture color, general objects, but limited bee-specific classes.  
-  **Decision:** Keep API but supplement with custom classifiers later.  
+  **Decision:** Keep Google Cloud Vision API but supplement with custom classifiers later.  
 
-- **H2:** Weather overlay adds context to hive behavior patterns.  
+- **H2:** Open-Meteo API weather overlay adds context to hive behavior patterns.  
   **Result:** Strong correlation with bee activity timelines.  
-  **Decision:** Keep weather integration as core feature.
+  **Decision:** Keep Open-Meteo API integration as core feature.
 
 - **H3:** Storage abstraction layer enables seamless cloud integration without breaking changes.  
   **Method:** Built 3-phase implementation (abstraction → S3 → UI) with comprehensive test suite.  
@@ -70,14 +70,14 @@ flowchart LR
 
 **Worked well**  
 - Streamlit session-state flow for photo batch uploads  
-- Weather API join by EXIF timestamp  
+- Open-Meteo API join by EXIF timestamp  
 - CSV/JSON export for quick validation  
 - Storage abstraction layer with zero breaking changes
 - One-click S3 setup with automatic bucket configuration
 - Comprehensive test suite with real AWS integration testing
 
 **Didn't work (yet)**  
-- Cloud Vision's lack of bee-specific labels → requires custom model  
+- Google Cloud Vision API's lack of bee-specific labels → requires custom model  
 - ~~Handling large image sets (upload latency)~~ → **Solved:** S3 multipart uploads + progress tracking
 - Graph schema still too shallow for insight  
 

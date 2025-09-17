@@ -1,0 +1,61 @@
+name: Build & Deploy — Portfolio + Engineering
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install docs dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install mkdocs mkdocs-material pymdown-extensions
+          # Optional (uncomment as used in mkdocs.engineering.yml):
+          # pip install mkdocstrings[python] mkdocs-jupyter mkdocs-mermaid2-plugin mkdocs-minify-plugin mkdocs-git-revision-date-localized-plugin
+
+      - name: Build portfolio
+        run: mkdocs build -f mkdocs.portfolio.yml -d site-portfolio
+
+      - name: Build engineering
+        run: mkdocs build -f mkdocs.engineering.yml -d site-engineering
+
+      - name: Prepare combined artifact
+        run: |
+          mkdir -p public/portfolio public/engineering
+          cp -r site-portfolio/* public/portfolio/
+          cp -r site-engineering/* public/engineering/
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

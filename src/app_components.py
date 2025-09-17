@@ -52,11 +52,37 @@ def display_image_and_photo_metadata():
 
 # Function to display inspection metadata
 def display_inspection_metadata():
-    # Add a more prominent header with an icon and color
+    # Add honeycomb-themed header with warm colors
     st.markdown("""
-    <div style="background-color: #f0f7ff; padding: 15px; border-radius: 10px; 
-        border-left: 5px solid #3366cc; margin-bottom: 20px;">
-    <h3 style="color: #3366cc; margin-top: 0;">🔍 Inspection Overview</h3>
+    <div style="
+        background: linear-gradient(135deg, #FFC300 0%, #FFE066 50%, #FFF2B3 100%);
+        padding: 20px;
+        border-radius: 15px;
+        border: 2px solid #D4A017;
+        margin-bottom: 25px;
+        box-shadow: 0 4px 8px rgba(255, 195, 0, 0.2);
+        position: relative;
+        overflow: hidden;
+    ">
+    <div style="
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        width: 40px;
+        height: 40px;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+    "></div>
+    <div style="
+        position: absolute;
+        bottom: -15px;
+        left: -15px;
+        width: 60px;
+        height: 60px;
+        background: rgba(255, 255, 255, 0.2);
+        clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    "></div>
+    <h3 style="color: #8B4513; margin-top: 0; text-shadow: 1px 1px 2px rgba(255,255,255,0.8); font-weight: 700;">🔍 Inspection Overview</h3>
     </div>
     """, unsafe_allow_html=True)
     
@@ -64,12 +90,12 @@ def display_inspection_metadata():
     col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown('<div class="metadata-container" style="border-left: 3px solid #3366cc;">', unsafe_allow_html=True)
+        st.markdown('<div class="metadata-container" style="border-left: 4px solid #D4A017; background: linear-gradient(135deg, #FFF9E6 0%, #FFFCF0 100%);">', unsafe_allow_html=True)
         
         # Display inspection date with larger text
         if hasattr(st.session_state, 'inspection_date') and st.session_state.inspection_date:
             inspection_date = st.session_state.inspection_date
-            st.markdown(f"<h4>📅 <span style='color:#3366cc;'>Inspection Date:</span></h4> {inspection_date.strftime('%B %d, %Y') if isinstance(inspection_date, datetime) else inspection_date}", unsafe_allow_html=True)
+            st.markdown(f"<h4>📅 <span style='color:#D4A017;'>Inspection Date:</span></h4> {inspection_date.strftime('%B %d, %Y') if isinstance(inspection_date, datetime) else inspection_date}", unsafe_allow_html=True)
         else:
             # Use the photo date as a default
             date_str = st.session_state.date_taken
@@ -77,14 +103,14 @@ def display_inspection_metadata():
                 try:
                     # Try to parse the date if it's in a standard format
                     date_obj = datetime.strptime(date_str, "%Y:%m:%d %H:%M:%S")
-                    st.markdown(f"<h4>📅 <span style='color:#3366cc;'>Inspection Date:</span></h4> {date_obj.strftime('%B %d, %Y')}", unsafe_allow_html=True)
+                    st.markdown(f"<h4>📅 <span style='color:#D4A017;'>Inspection Date:</span></h4> {date_obj.strftime('%B %d, %Y')}", unsafe_allow_html=True)
                 except:
-                    st.markdown(f"<h4>📅 <span style='color:#3366cc;'>Inspection Date:</span></h4> {date_str}", unsafe_allow_html=True)
+                    st.markdown(f"<h4>📅 <span style='color:#D4A017;'>Inspection Date:</span></h4> {date_str}", unsafe_allow_html=True)
             else:
-                st.markdown("<h4>📅 <span style='color:#3366cc;'>Inspection Date:</span></h4> Not available", unsafe_allow_html=True)
+                st.markdown("<h4>📅 <span style='color:#D4A017;'>Inspection Date:</span></h4> Not available", unsafe_allow_html=True)
         
         # Location with icon and better formatting
-        st.markdown("<h4>📍 <span style='color:#3366cc;'>Location:</span></h4>", unsafe_allow_html=True)
+        st.markdown("<h4>📍 <span style='color:#D4A017;'>Location:</span></h4>", unsafe_allow_html=True)
         if st.session_state.lat and st.session_state.lon:
             try:
                 if isinstance(st.session_state.lat, (float, int)) and isinstance(st.session_state.lon, (float, int)):
@@ -99,10 +125,10 @@ def display_inspection_metadata():
         st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
-        st.markdown('<div class="metadata-container" style="border-left: 3px solid #3366cc;">', unsafe_allow_html=True)
+        st.markdown('<div class="metadata-container" style="border-left: 4px solid #D4A017; background: linear-gradient(135deg, #FFF9E6 0%, #FFFCF0 100%);">', unsafe_allow_html=True)
         
         # Weather data section with icon and better formatting
-        st.markdown("<h4>🌦️ <span style='color:#3366cc;'>Weather Conditions:</span></h4>", unsafe_allow_html=True)
+        st.markdown("<h4>🌦️ <span style='color:#D4A017;'>Weather Conditions:</span></h4>", unsafe_allow_html=True)
         
         if st.session_state.weather_info["weather_source"] == "Not retrieved":
             st.markdown("Weather data not retrieved yet.")

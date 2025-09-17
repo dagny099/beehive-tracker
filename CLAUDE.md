@@ -144,15 +144,45 @@ The app uses comprehensive session state management via `src/utils/session_manag
 
 ## Testing Approach
 
-Currently no automated tests exist. When implementing tests:
-- Use `pytest` with fixtures for image processing components
-- Mock external API calls (Vision API, Weather API) for reliable testing
-- Test image analysis with known sample images and expected results
-- Focus on critical paths: photo upload → EXIF extraction → API analysis → data storage
+The project includes comprehensive test suites demonstrating best practices for external API testing:
+
+### Test Commands
+```bash
+# Run all tests
+pytest tests/ -v
+
+# Run specific API tests
+pytest tests/unit/test_vision_api.py tests/unit/test_weather_api.py -v
+
+# Run with coverage reporting
+pytest tests/unit/ --cov=src/api_services --cov-report=html
+
+# Run tests matching specific patterns
+pytest tests/ -k "test_error" -v
+```
+
+### Test Structure
+- **`tests/unit/`**: Fast, isolated unit tests with comprehensive mocking
+- **`tests/integration/`**: Multi-component integration tests
+- **`tests/system/`**: End-to-end system tests
+- **`tests/fixtures/`**: Reusable mock data and API responses
+
+### API Testing Standards
+- **Vision API Tests** (`test_vision_api.py`): Mock Google Cloud Vision client, test bee detection logic, error handling, input validation
+- **Weather API Tests** (`test_weather_api.py`): Mock HTTP requests, test data parsing, network error scenarios, parameter validation
+- **Test Fixtures**: Realistic mock responses in `tests/fixtures/` for consistent testing
+- **Documentation**: `tests/README_API_TESTING.md` provides comprehensive testing patterns for junior developers
+
+### Key Testing Principles
+1. **Never make real API calls in tests** - All external dependencies are mocked
+2. **Test multiple scenarios** - Success, failure, edge cases, malformed data
+3. **Validate business logic** - Bee classification, weather processing, data transformation
+4. **Error resilience** - Graceful degradation when external services fail
+5. **Production patterns** - Demonstrate professional testing practices
 
 ### Risk-Based Testing for Streamlit
 All Streamlit changes require risk assessment:
-- 🔴 HIGH RISK: Core flows, session state, navigation → Full testing
+- 🔴 HIGH RISK: Core flows, session state, navigation → Full testing required
 - 🟡 MEDIUM RISK: Secondary features, UI logic → Standard testing
 - 🟢 LOW RISK: Styling, copy, config → Minimal testing
 
@@ -184,6 +214,8 @@ All Streamlit changes require risk assessment:
 2. **UI Enhancements**: Modify `src/app_components.py` or create new component files
 3. **Data Export Options**: Extend `src/data_io.py` with new format handlers
 4. **Timeline Visualizations**: Enhance `src/timeline_component.py` with new Plotly chart types
+5. **API Integration Testing**: Use `tests/fixtures/` for mock responses and follow patterns in `test_vision_api.py` and `test_weather_api.py`
+6. **Adding New External APIs**: Follow comprehensive testing patterns documented in `tests/README_API_TESTING.md`
 
 ## Troubleshooting
 

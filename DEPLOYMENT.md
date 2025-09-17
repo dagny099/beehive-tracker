@@ -1,4 +1,4 @@
-# 🐝 Beehive Tracker - Deployment Guide
+# 🐝 Beehive Photo Metadata Tracker - Deployment Guide
 
 ## Overview
 This guide provides comprehensive instructions for deploying the Beehive Photo Metadata Tracker application from local development to production on Google Cloud Platform.
@@ -99,7 +99,7 @@ gcloud iam service-accounts create beehive-tracker-sa \
     --description="Service account for Beehive Tracker app" \
     --display-name="Beehive Tracker"
 
-# Grant necessary permissions
+# Grant necessary permissions for Google Cloud Vision API
 gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
     --member="serviceAccount:beehive-tracker-sa@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
     --role="roles/vision.admin"
@@ -112,7 +112,7 @@ gcloud iam service-accounts keys create ./key.json \
 ### 5. Enable Required APIs
 ```bash
 # Enable necessary Google Cloud APIs
-gcloud services enable vision.googleapis.com
+gcloud services enable vision.googleapis.com  # Google Cloud Vision API
 gcloud services enable containerregistry.googleapis.com
 gcloud services enable run.googleapis.com
 ```
@@ -444,12 +444,12 @@ gcloud projects get-iam-policy $PROJECT_ID \
 gcloud run services describe hive-tracker --region=$GCP_REGION
 ```
 
-#### 3. Vision API Issues
+#### 3. Google Cloud Vision API Issues
 ```bash
-# Issue: API not enabled
+# Issue: Google Cloud Vision API not enabled
 gcloud services list --enabled | grep vision
 
-# Issue: Quota exceeded
+# Issue: Google Cloud Vision API quota exceeded
 gcloud service-quotas list --service=vision.googleapis.com
 ```
 
