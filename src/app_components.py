@@ -6,8 +6,9 @@ from PIL import Image
 from datetime import datetime
 import os
 import json
-from src.timeline_component import process_url_image
+from src.timeline_component import format_location_for_display
 from src.utils.data_handler import add_photo_to_inspection
+from src.api_services.weather import get_weather_open_meteo
 
 
 
@@ -85,79 +86,101 @@ def display_inspection_metadata():
     <h3 style="color: #8B4513; margin-top: 0; text-shadow: 1px 1px 2px rgba(255,255,255,0.8); font-weight: 700;">🔍 Inspection Overview</h3>
     </div>
     """, unsafe_allow_html=True)
-    
-    # Create 2 columns for inspection metadata
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown('<div class="metadata-container" style="border-left: 4px solid #D4A017; background: linear-gradient(135deg, #FFF9E6 0%, #FFFCF0 100%);">', unsafe_allow_html=True)
-        
-        # Display inspection date with larger text
-        if hasattr(st.session_state, 'inspection_date') and st.session_state.inspection_date:
-            inspection_date = st.session_state.inspection_date
-            st.markdown(f"<h4>📅 <span style='color:#D4A017;'>Inspection Date:</span></h4> {inspection_date.strftime('%B %d, %Y') if isinstance(inspection_date, datetime) else inspection_date}", unsafe_allow_html=True)
-        else:
-            # Use the photo date as a default
-            date_str = st.session_state.date_taken
-            if date_str and date_str != "Unknown":
+
+    # Add inspection dropdown selector
+    if 'inspections' in st.session_state and st.session_state.inspections:
+        inspection_options = []
+        for idx, inspection in enumerate(st.session_state.inspections):
+            # Get the inspection title using same logic as timeline
+            from src.utils.data_handler import get_inspection_title
+            title = get_inspection_title(idx)
+            inspection_options.append((idx, title))
+
+        # Sort by date (newest first)
+        inspection_options.sort(key=lambda x: st.session_state.inspections[x[0]]['date'], reverse=True)
+
+        # Create dropdown
+        option_labels = [f"{title} ({st.session_state.inspections[idx]['photo_count']} photos)" for idx, title in inspection_options]
+        option_indices = [idx for idx, _ in inspection_options]
+
+        current_selection = st.session_state.get('selected_inspection', 0)
+        if current_selection not in option_indices:
+            current_selection = option_indices[0] if option_indices else 0
+
+        selected_index = st.selectbox(
+            "Select Inspection:",
+            options=range(len(option_labels)),
+            format_func=lambda x: option_labels[x],
+            index=option_indices.index(current_selection) if current_selection in option_indices else 0,
+            key="inspection_selector"
+        )
+
+        # Update selected inspection
+        st.session_state.selected_inspection = option_indices[selected_index]
+
+    # Display inspection date and weather in compact format
+    if ('inspections' in st.session_state and
+        'selected_inspection' in st.session_state and
+        st.session_state.selected_inspection is not None and
+        st.session_state.selected_inspection < len(st.session_state.inspections)):
+
+        current_inspection = st.session_state.inspections[st.session_state.selected_inspection]
+
+        # Compact date and location display
+        col1, col2 = st.columns([1, 1])
+
+        with col1:
+            st.markdown("**📅 Inspection Date:**")
+            date_obj = current_inspection.get('date')
+            if isinstance(date_obj, datetime):
+                date_display = date_obj.strftime('%B %d, %Y')
+            elif isinstance(date_obj, str):
                 try:
-                    # Try to parse the date if it's in a standard format
-                    date_obj = datetime.strptime(date_str, "%Y:%m:%d %H:%M:%S")
-                    st.markdown(f"<h4>📅 <span style='color:#D4A017;'>Inspection Date:</span></h4> {date_obj.strftime('%B %d, %Y')}", unsafe_allow_html=True)
+                    parsed_date = datetime.strptime(date_obj.replace('T', ' '), "%Y-%m-%d %H:%M:%S")
+                    date_display = parsed_date.strftime('%B %d, %Y')
                 except:
-                    st.markdown(f"<h4>📅 <span style='color:#D4A017;'>Inspection Date:</span></h4> {date_str}", unsafe_allow_html=True)
+                    date_display = date_obj
             else:
-                st.markdown("<h4>📅 <span style='color:#D4A017;'>Inspection Date:</span></h4> Not available", unsafe_allow_html=True)
-        
-        # Location with icon and better formatting
-        st.markdown("<h4>📍 <span style='color:#D4A017;'>Location:</span></h4>", unsafe_allow_html=True)
-        if st.session_state.lat and st.session_state.lon:
-            try:
-                if isinstance(st.session_state.lat, (float, int)) and isinstance(st.session_state.lon, (float, int)):
-                    st.markdown(f"{st.session_state.lat:.6f}, {st.session_state.lon:.6f}")
-                else:
-                    st.markdown(f"{st.session_state.lat}, {st.session_state.lon}")
-            except:
-                st.markdown(f"{st.session_state.lat}, {st.session_state.lon}")
+                date_display = "Not available"
+            st.markdown(date_display)
+
+        with col2:
+            st.markdown("**📍 Location:**")
+            location_with_icon = format_location_for_display(current_inspection)
+            current_location = location_with_icon.replace("📍 ", "")  # Remove icon for consistency
+            st.markdown(current_location)
+
+        # Compact weather display with icons
+        weather_data = current_inspection.get('weather_data')
+        if weather_data and weather_data.get('weather_source') and 'Error' not in str(weather_data.get('weather_source', '')):
+            st.markdown("**🌦️ Weather Conditions:**")
+            # Create compact weather display with icons
+            weather_parts = []
+            if weather_data.get('weather_temperature_C') is not None:
+                weather_parts.append(f"🌡️ {weather_data['weather_temperature_C']}°C")
+            if weather_data.get('weather_precipitation_mm') is not None:
+                weather_parts.append(f"💧 {weather_data['weather_precipitation_mm']}mm")
+            if weather_data.get('weather_cloud_cover_percent') is not None:
+                weather_parts.append(f"☁️ {weather_data['weather_cloud_cover_percent']}%")
+            if weather_data.get('weather_wind_speed_kph') is not None:
+                weather_parts.append(f"💨 {weather_data['weather_wind_speed_kph']}kph")
+
+            if weather_parts:
+                st.markdown(" • ".join(weather_parts))
+
+            # Show data source in smaller text
+            source = weather_data.get('weather_source', 'Open-Meteo API')
+            st.markdown(f"*Source: {source}*")
         else:
-            st.markdown("Not available")
-            
-        st.markdown('</div>', unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown('<div class="metadata-container" style="border-left: 4px solid #D4A017; background: linear-gradient(135deg, #FFF9E6 0%, #FFFCF0 100%);">', unsafe_allow_html=True)
-        
-        # Weather data section with icon and better formatting
-        st.markdown("<h4>🌦️ <span style='color:#D4A017;'>Weather Conditions:</span></h4>", unsafe_allow_html=True)
-        
-        if st.session_state.weather_info["weather_source"] == "Not retrieved":
-            st.markdown("Weather data not retrieved yet.")
-            if st.button("Get Weather Data", key="weather_button"):
-                with st.spinner("Fetching weather data..."):
-                    # Simulate API call delay
-                    time.sleep(0.5)
-                    st.session_state.weather_info.update({
-                        "weather_temperature_C": 23.5,
-                        "weather_precipitation_mm": 0.0,
-                        "weather_cloud_cover_percent": 25,
-                        "weather_wind_speed_kph": 8.2,
-                        "weather_code": 1,  # Clear sky
-                        "weather_source": "Open-Meteo (Simulated)"
-                    })
-                    st.session_state.weather_fetched = True
-                    st.rerun()
-        else:
-            st.markdown(f"**Temperature:** {st.session_state.weather_info['weather_temperature_C']}°C")
-            st.markdown(f"**Precipitation:** {st.session_state.weather_info['weather_precipitation_mm']} mm")
-            st.markdown(f"**Cloud Cover:** {st.session_state.weather_info['weather_cloud_cover_percent']}%")
-            st.markdown(f"**Wind Speed:** {st.session_state.weather_info['weather_wind_speed_kph']} km/h")
-        
-        st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown("**🌦️ Weather:** Not available")
+
+    # Add gallery functionality for current inspection
+    display_inspection_gallery()
 
 
 # Function to display photo analysis details
 def display_photo_analysis():
-    st.markdown("<h3>📊 Photo Analysis</h3>", unsafe_allow_html=True)
+    # Remove header since Photo Analysis is now spatially grouped with photo metadata
     col1, col2, col3 = st.columns(3)
     
     # Image Analysis column
@@ -261,7 +284,7 @@ def display_image_upload_options(in_sidebar=True, expanded=True):
                 # Only process if it's a new URL or previous processing failed
                 if 'last_processed_url' not in st.session_state or st.session_state.last_processed_url != img_url:
                     with st.spinner("Processing image from URL..."):
-                        # Import the function from the right module
+                        # Use the consistent image processing pipeline
                         from src.utils.image_processor import process_url_image
                         photo_data = process_url_image(img_url)
                         if photo_data:
@@ -325,12 +348,16 @@ def update_timeline():
 # Function to render the sidebar with inspection list
 def render_sidebar():
     with st.sidebar:
-        # First add the image upload section at the top
+        # Add main app header at top of sidebar
+        st.markdown("# 🐝 Hive Photo Metadata Tracker")
+        st.markdown("<hr>", unsafe_allow_html=True)
+
+        # First add the image upload section
         display_image_upload_options(in_sidebar=True, expanded=True)
-        
+
         # Add some space
         st.markdown("<hr>", unsafe_allow_html=True)
-        
+
         # Then show inspection details
         st.header("Inspection Details")
         
@@ -338,46 +365,173 @@ def render_sidebar():
             st.write(f"Total Inspections: {len(st.session_state.inspections)}")
             st.write(f"Total Photos: {sum(insp['photo_count'] for insp in st.session_state.inspections)}")
             
-            # Display a list of inspections with letter identifiers
-            st.subheader("Inspection History")
-            
-            # Sort inspections by date
-            sorted_inspections = sorted(
-                enumerate(st.session_state.inspections), 
-                key=lambda x: x[1]['date'] if isinstance(x[1]['date'], datetime) else datetime.strptime(x[1]['date'], "%Y:%m:%d %H:%M:%S")
-            )
-            
-            # Generate letter identifiers
-            for idx, (i, inspection) in enumerate(sorted_inspections):
-                letter = chr(65 + idx % 26)  # A, B, C, ... Z, then AA, AB, etc.
-                date_str = inspection['date'].strftime("%b %d, %Y") if isinstance(inspection['date'], datetime) else inspection['date']
-                if st.button(f"Inspection {letter}: {date_str} - {inspection['photo_count']} photos", key=f"insp_{i}"):
-                    st.session_state.selected_inspection = i
-                    st.info(f"Selected inspection {letter} from {date_str}")
-                    
-                    # Option to view in gallery
-                    if st.button("📸 View in Gallery", key=f"gallery_{i}"):
-                        st.session_state.page = 'gallery'
-                        st.rerun()
+            # Note: Inspection selection is now handled via dropdown on main dashboard
         else:
             st.info("No inspections recorded yet. Start by uploading a hive photo.")
         
-        # Export data option
+        # Export data option with functional implementation
         st.subheader("Data Management")
         if st.button("Export Data (JSON)", key="export_button"):
             if st.session_state.inspections:
-                # In a real app, you would save to a file
-                st.success("Data would be exported as JSON")
+                # Export current data to JSON file
+                import json
+                from datetime import datetime
+                import os
+
+                export_data = {
+                    "inspections": st.session_state.inspections,
+                    "exported_at": datetime.now().isoformat()
+                }
+
+                # Ensure exports directory exists
+                os.makedirs("data/exports", exist_ok=True)
+
+                # Create filename with timestamp
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                filename = f"data/exports/inspections_export_{timestamp}.json"
+
+                # Save to file
+                with open(filename, 'w') as f:
+                    json.dump(export_data, f, indent=2, default=str)
+
+                st.success(f"Data exported to {filename}")
             else:
                 st.warning("No data to export")
+
+        # Import data option
+        uploaded_json = st.file_uploader("Import JSON Data", type=["json"], key="import_json")
+        if uploaded_json is not None:
+            try:
+                import json
+                import os
+                import_data = json.load(uploaded_json)
+
+                if 'inspections' in import_data:
+                    # Validate file paths and report missing files
+                    missing_files = []
+                    total_photos = 0
+
+                    for inspection in import_data['inspections']:
+                        for photo in inspection.get('photos', []):
+                            total_photos += 1
+                            file_path = photo.get('file_path', '')
+                            if file_path and not os.path.exists(file_path):
+                                missing_files.append(file_path)
+
+                    # Load inspections into session state
+                    st.session_state.inspections = import_data['inspections']
+
+                    # Save to main data file
+                    from src.utils.data_handler import save_inspections_to_disk
+                    save_inspections_to_disk()
+
+                    # Report import status
+                    if missing_files:
+                        st.warning(f"Imported {len(import_data['inspections'])} inspections with {total_photos} photos. ⚠️ {len(missing_files)} image files not found at expected paths.")
+                        with st.expander("Missing files"):
+                            for missing in missing_files:
+                                st.write(f"• {missing}")
+                        # Clear file uploader and trigger rerun for missing files case too
+                        st.session_state.pop('import_json', None)
+                        st.rerun()
+                    else:
+                        st.success(f"✅ Imported {len(import_data['inspections'])} inspections with {total_photos} photos. All image files found!")
+
+                    # Clear file uploader to prevent reprocessing and trigger rerun
+                    st.session_state.pop('import_json', None)
+                    st.rerun()
+                else:
+                    st.error("Invalid JSON format")
+            except Exception as e:
+                st.error(f"Import failed: {e}")
         
-        # Display cache information
-        st.subheader("Cache Status")
+        # Display cache and file information
+        st.subheader("Storage Status")
         if 'url_image_cache' in st.session_state:
             cache_count = len(st.session_state.url_image_cache)
             st.write(f"URL Image Cache: {cache_count} images")
-            
+
             if cache_count > 0 and st.button("Clear Cache", key="clear_cache"):
                 st.session_state.url_image_cache = {}
                 st.success("Cache cleared!")
                 st.rerun()
+
+        # Show upload directory size
+        import os
+        upload_dir = "data/uploads/users/default_user"
+        if os.path.exists(upload_dir):
+            files = [f for f in os.listdir(upload_dir) if f.endswith(('.jpg', '.jpeg', '.png'))]
+            total_size = sum(os.path.getsize(os.path.join(upload_dir, f)) for f in files) / (1024*1024)
+            st.write(f"Stored Images: {len(files)} files ({total_size:.1f} MB)")
+
+def display_inspection_gallery():
+    """Display photo gallery for the current inspection integrated into the overview"""
+    if 'selected_inspection' not in st.session_state or st.session_state.selected_inspection is None:
+        return
+
+    if 'inspections' not in st.session_state or not st.session_state.inspections:
+        return
+
+    inspection_idx = st.session_state.selected_inspection
+    if inspection_idx >= len(st.session_state.inspections):
+        return
+
+    inspection = st.session_state.inspections[inspection_idx]
+    photos = inspection.get('photos', [])
+
+    if not photos:
+        st.info("No photos in this inspection.")
+        return
+
+    # Gallery header with bee styling - simplified without colored box
+    st.markdown(f"**📷 Photos in this Inspection ({len(photos)})**")
+
+    # Display photos in a grid
+    import math
+    cols_per_row = 3
+    rows = math.ceil(len(photos) / cols_per_row)
+
+    for row in range(rows):
+        columns = st.columns(cols_per_row)
+        for col in range(cols_per_row):
+            photo_idx = row * cols_per_row + col
+            if photo_idx < len(photos):
+                photo = photos[photo_idx]
+                with columns[col]:
+                    # Display photo thumbnail
+                    try:
+                        if 'file_path' in photo and os.path.exists(photo['file_path']):
+                            from PIL import Image
+                            img = Image.open(photo['file_path'])
+                            st.image(img, caption=photo.get('filename', f"Photo {photo_idx+1}"), use_container_width=True)
+                        elif 'data' in photo:
+                            if isinstance(photo['data'], bytes):
+                                from PIL import Image
+                                import io
+                                img = Image.open(io.BytesIO(photo['data']))
+                            else:
+                                img = photo['data']
+                            st.image(img, caption=photo.get('filename', f"Photo {photo_idx+1}"), use_container_width=True)
+                        else:
+                            st.error(f"Photo {photo_idx+1} data not available")
+                    except Exception as e:
+                        st.error(f"Could not load photo: {e}")
+
+                    # Photo metadata below image
+                    with st.expander(f"📋 Details", expanded=False):
+                        st.markdown(f"**Filename:** {photo.get('filename', 'Unknown')}")
+                        st.markdown(f"**Date Taken:** {photo.get('date_taken', 'Unknown')}")
+                        st.markdown(f"**Camera:** {photo.get('camera_model', 'Unknown')}")
+                        st.markdown(f"**Resolution:** {photo.get('resolution', 'Unknown')}")
+                        if photo.get('file_size_mb'):
+                            st.markdown(f"**Size:** {photo.get('file_size_mb'):.1f} MB")
+                        if photo.get('lat') and photo.get('lon'):
+                            st.markdown(f"**GPS:** {photo.get('lat'):.4f}, {photo.get('lon'):.4f}")
+
+                        # Color palette if available
+                        if 'color_palette' in photo:
+                            st.markdown("**Color Palette:**")
+                            palette_html = ""
+                            for color in photo['color_palette']:
+                                palette_html += f'<div style="display: inline-block; width: 25px; height: 25px; background-color: {color}; border: 1px solid #ccc; margin: 2px;"></div>'
+                            st.markdown(palette_html, unsafe_allow_html=True)

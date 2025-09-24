@@ -460,12 +460,20 @@ def process_url_image(url):
             image_data = st.session_state.url_image_cache[url]
             img = Image.open(io.BytesIO(image_data))
             
-            # Extract filename from URL
-            filename = url.split('/')[-1]
-            if '?' in filename:
-                filename = filename.split('?')[0]
-            if not filename:
-                filename = "image_from_url.jpg"
+            # Generate unique filename for URL images (cached)
+            from datetime import datetime
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+            # Try to get file extension from URL
+            url_path = url.split('/')[-1].split('?')[0]
+            if '.' in url_path and len(url_path.split('.')[-1]) <= 4:
+                extension = url_path.split('.')[-1].lower()
+                if extension in ['jpg', 'jpeg', 'png', 'gif', 'webp']:
+                    filename = f"url_image_{timestamp}.{extension}"
+                else:
+                    filename = f"url_image_{timestamp}.jpg"
+            else:
+                filename = f"url_image_{timestamp}.jpg"
                 
             # Process the cached image
             return process_image_file(io.BytesIO(image_data), filename)
@@ -481,12 +489,20 @@ def process_url_image(url):
                     st.session_state.url_image_cache = {}
                 st.session_state.url_image_cache[url] = image_data
                 
-                # Extract filename from URL
-                filename = url.split('/')[-1]
-                if '?' in filename:
-                    filename = filename.split('?')[0]
-                if not filename:
-                    filename = "image_from_url.jpg"
+                # Generate unique filename for URL images
+                from datetime import datetime
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+                # Try to get file extension from URL
+                url_path = url.split('/')[-1].split('?')[0]
+                if '.' in url_path and len(url_path.split('.')[-1]) <= 4:
+                    extension = url_path.split('.')[-1].lower()
+                    if extension in ['jpg', 'jpeg', 'png', 'gif', 'webp']:
+                        filename = f"url_image_{timestamp}.{extension}"
+                    else:
+                        filename = f"url_image_{timestamp}.jpg"
+                else:
+                    filename = f"url_image_{timestamp}.jpg"
                 
                 # Process the downloaded image
                 return process_image_file(io.BytesIO(image_data), filename)

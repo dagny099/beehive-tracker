@@ -13,11 +13,11 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from storage_ui import show_storage_management_page
 
 # Page configuration
-st.set_page_config(
-    page_title="Storage Management - Beehive Tracker",
-    page_icon="🗄️",
-    layout="wide"
-)
+# st.set_page_config(
+#     page_title="Storage Management - Beehive Tracker",
+#     page_icon="🗄️",
+#     layout="wide"
+# )
 
 # Main page content
 show_storage_management_page()

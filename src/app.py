@@ -77,86 +77,57 @@ def main():
     # Initialize session state
     initialize_session_state()
     
-    # Auto-load default image on first run (only once at startup)
-    if 'app_initialized' not in st.session_state:
-        st.session_state.app_initialized = True
-        
-        # Try to find the default image
-        default_image_paths = ["src/default_beepic2.jpg", "src/default_beepic.jpg", "default_beepic2.jpg", "default_beepic.jpg"]
-        
-        # Let's try to find and load the first available image
-        for img_path in default_image_paths:
-            if os.path.exists(img_path):
+    # Check for latest backup to load
+    import glob
+    import os
+    export_dir = "data/exports"
+    if os.path.exists(export_dir):
+        export_files = glob.glob(os.path.join(export_dir, "inspections_export_*.json"))
+        if export_files:
+            # Find the most recent export
+            latest_export = max(export_files, key=os.path.getctime)
+            export_name = os.path.basename(latest_export)
+
+            if st.button(f"📁 Load Latest Backup ({export_name})", key="load_backup", help="Load your most recent data export"):
                 try:
-                    # Directly set the image without complex processing
-                    with open(img_path, "rb") as file:
-                        file_content = file.read()
-                        # Set basic session state variables manually
-                        st.session_state.current_image = file_content
-                        st.session_state.filename = os.path.basename(img_path)
-                        st.session_state.date_taken = datetime.now().strftime("%Y:%m:%d %H:%M:%S")
-                        st.session_state.date_source = "Default image"
-                        st.session_state.camera_model = "Default"
-                        st.session_state.image_resolution = "Unknown"
-                        st.session_state.lat = None
-                        st.session_state.lon = None
-                        
-                        # Set a simple default color palette
-                        st.session_state.palette_hex = ["#FFC300", "#FFD700", "#FFEB99", "#FFF5D6", "#FFFBED"]
-                        
-                        # Initialize weather info if not present
-                        if 'weather_info' not in st.session_state:
-                            st.session_state.weather_info = {
-                                "weather_temperature_C": None,
-                                "weather_precipitation_mm": None,
-                                "weather_cloud_cover_percent": None,
-                                "weather_wind_speed_kph": None,
-                                "weather_code": None,
-                                "weather_source": "Not retrieved"
-                            }
-                        
-                        # Create a simple photo data dictionary
-                        photo_data = {
-                            'filename': os.path.basename(img_path),
-                            'date_taken': st.session_state.date_taken,
-                            'camera_model': 'Default',
-                            'resolution': 'Unknown',
-                            'color_palette': st.session_state.palette_hex
-                        }
-                        
-                        # Create a default inspection with this photo
-                        today = datetime.now()
-                        if 'inspections' not in st.session_state:
-                            st.session_state.inspections = []
-                        
-                        st.session_state.inspections.append({
-                            'date': today,
-                            'location': 'Default location',
-                            'photos': [photo_data],
-                            'photo_count': 1,
-                            'weather_summary': 'Not recorded'
-                        })
-                        
-                        # Set selected inspection to the new one
-                        st.session_state.selected_inspection = len(st.session_state.inspections) - 1
-                    
-                    # Break after successfully loading an image
-                    break
+                    import json
+                    with open(latest_export, 'r') as f:
+                        import_data = json.load(f)
+
+                    if 'inspections' in import_data:
+                        st.session_state.inspections = import_data['inspections']
+                        from src.utils.data_handler import save_inspections_to_disk
+                        save_inspections_to_disk()
+
+                        # Load first photo to display inspection overview
+                        if import_data['inspections'] and import_data['inspections'][0].get('photos'):
+                            first_photo = import_data['inspections'][0]['photos'][0]
+                            # Set session state to display this photo
+                            from PIL import Image
+                            import os
+                            if os.path.exists(first_photo['file_path']):
+                                st.session_state.current_image = Image.open(first_photo['file_path'])
+                                st.session_state.filename = first_photo['filename']
+                                st.session_state.selected_inspection = 0
+
+                        st.success(f"✅ Loaded {len(import_data['inspections'])} inspections from backup")
+                        st.rerun()
+                    else:
+                        st.error("Invalid backup format")
                 except Exception as e:
-                    # If this image fails, try the next one
-                    continue
+                    st.error(f"Failed to load backup: {e}")
+
 
     
-    # App title and description
-    st.markdown("# 🐝 Hive Photo Metadata Tracker")
-    st.markdown("""
-    Track and organize your beehive photos with rich metadata, including weather conditions, 
-    color analysis, and computer vision insights.
-    """)
+    # App content (header moved to sidebar)
     
     # Render the timeline with some margin
     st.markdown('<div style="margin: 15px 0;"></div>', unsafe_allow_html=True)
     timeline = render_timeline()
+    st.markdown("""
+    Track and organize your beehive photos with rich metadata, including weather conditions,
+    color analysis, and computer vision insights.
+    """)
     st.markdown('<div style="margin: 15px 0;"></div>', unsafe_allow_html=True)
     
     st.markdown("<br>", unsafe_allow_html=True)
@@ -165,13 +136,16 @@ def main():
     if 'current_image' in st.session_state and st.session_state.current_image:
         # Display image and photo metadata
         display_image_and_photo_metadata()
-        
-        # Display inspection metadata
-        display_inspection_metadata()
-        
-        # Display photo analysis sections
+
+        # Display photo analysis sections (moved to be adjacent to photo)
         display_photo_analysis()
-        
+
+        # Add horizontal line separator
+        st.markdown('<hr style="border: 1px solid #FFC300; margin: 30px 0;">', unsafe_allow_html=True)
+
+        # Display inspection overview (renamed from inspection metadata)
+        display_inspection_metadata()
+
         # We no longer need this since upload is in sidebar
         # display_image_upload_options(expanded=False)
     else:

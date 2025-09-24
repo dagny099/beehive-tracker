@@ -48,7 +48,7 @@ if st.session_state.logged_in:
     pg = st.navigation(
         {
             "Hive Tracker": [dashboard],
-            "Views": [calendar, gallery],
+            "Views": [calendar],
             "Management": [storage],
             # "Analytics": [trends],
             "Account": [logout_page],
