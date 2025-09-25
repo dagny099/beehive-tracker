@@ -1,6 +1,6 @@
 site_name: Beehive Photo Metadata Tracker
 site_description: Transform your beehive inspection photos into structured, searchable knowledge
-site_author: Barbara H. Smith
+site_author: Barbara Hidalgo-Sotelo
 site_url: https://hivetracker.barbhs.com
 
 # Repository information
@@ -13,7 +13,7 @@ docs_dir: docs
 site_dir: site
 
 # Copyright
-copyright: Copyright &copy; 2024 Barbara H. Smith
+copyright: Copyright &copy; 2025 BHS
 
 # Configuration
 theme:
@@ -109,17 +109,22 @@ markdown_extensions:
 # Page tree navigation
 nav:
   - Home: index.md
-  - Overview: overview.md
+  - About: about.md
   - Getting Started:
     - getting-started/index.md
     - Installation: getting-started/installation.md
     - Quick Start: getting-started/quick-start.md
   - User Guide:
     - user-guide/index.md
-  - API Reference:
-    - api-reference/index.md
-    - Vision API: api-reference/vision.md
-  - Architecture: architecture.md
+    - Photo Upload: user-guide/photo-upload.md
+    - Timeline View: user-guide/timeline-view.md
+    - Gallery View: user-guide/gallery-view.md
+    - Data Export: user-guide/data-export.md
+  - For Developers:
+    - Architecture: architecture.md
+    - API Reference:
+      - api-reference/index.md
+      - Vision API: api-reference/vision.md
 
 # Extra CSS and JS
 extra_css:

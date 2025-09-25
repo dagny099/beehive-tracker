@@ -36,14 +36,18 @@
 
 </div>
 
-## Welcome to the Future of Beehive Management
+## About the Beehive Photo Metadata Tracker
 
-The **Beehive Photo Metadata Tracker** is a cutting-edge web application that transforms unstructured beehive inspection photos into a **structured, searchable knowledge base**. Built for modern beekeepers who want to leverage data science and computer vision to enhance their apiculture practices.
+The **Beehive Photo Metadata Tracker** helps beekeepers organize and analyze their inspection photos by automatically extracting metadata and providing insights. Upload your hive photos and get structured data about dates, locations, weather conditions, and visual analysis to track your hives over time.
+
+This application enhances traditional beekeeping practices with thoughtful technology while respecting the craft and expertise of experienced beekeepers.
+
+[:octicons-arrow-right-24: Learn more about our approach](about.md)
 
 !!! tip "🚀 Try the Live Demo"
     Experience the application firsthand at **[hivetracker.barbhs.com](https://hivetracker.barbhs.com)**
 
-## Why Choose Beehive Tracker?
+## What You Can Do
 
 <div class="grid" markdown>
 
@@ -108,12 +112,20 @@ Built with modern, reliable technologies:
 - **Deployment**: Docker, Google Cloud Run
 - **Storage**: Flexible file-based with JSON/CSV export
 
-## What Makes This Special?
+## How It Helps Your Beekeeping
 
-!!! quote "Data-Driven Beekeeping"
-    "This application represents the intersection of traditional beekeeping knowledge and modern data science. By automatically extracting and organizing metadata from inspection photos, beekeepers can focus on what they do best - caring for their bees - while building a rich knowledge base for future reference."
-    
-    — **Barbara H. Smith**, *Data Scientist & Certified Data Management Professional (CDMP)*
+The application automatically extracts and organizes metadata from inspection photos, so you can focus on caring for your bees while building a comprehensive historical record for future reference.
+
+### Traditional vs. Digital Approach
+
+| Task | Traditional Method | With This Application |
+|------|-------------------|----------------------|
+| **Photo Organization** | Manual folder management | Automated timeline organization |
+| **Record Keeping** | Handwritten notes | Automated extraction with your annotations |
+| **Weather Context** | Memory or separate logs | Integrated historical weather data |
+| **Finding Patterns** | Experience and memory | Visual timeline analysis |
+| **Data Export** | Copying notes manually | Digital export to CSV/JSON |
+| **Searching Records** | Manual file browsing | Search by date, weather, or tags |
 
 ## Key Features
 
@@ -140,4 +152,4 @@ Built with modern, reliable technologies:
 
 ---
 
-*Ready to revolutionize your beekeeping workflow? Let's get started!* 🐝
+*Ready to organize your hive inspection photos? Let's get started!* 🐝
