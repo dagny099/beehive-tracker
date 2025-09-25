@@ -113,27 +113,34 @@ nav:
   - Getting Started:
     - getting-started/index.md
     - Installation: getting-started/installation.md
+    - Configuration: getting-started/configuration.md
     - Quick Start: getting-started/quick-start.md
   - User Guide:
     - user-guide/index.md
     - Photo Upload: user-guide/photo-upload.md
     - Timeline View: user-guide/timeline-view.md
     - Gallery View: user-guide/gallery-view.md
+    - Calendar View: user-guide/calendar-view.md
     - Data Export: user-guide/data-export.md
+    - Understanding Analysis: user-guide/metadata-analysis.md
+  - Deployment:
+    - deployment/index.md
+    - Google Cloud Run: deployment/cloud-run.md
   - For Developers:
     - Architecture: architecture.md
     - API Reference:
       - api-reference/index.md
       - Vision API: api-reference/vision.md
+      - Weather API: api-reference/weather.md
+      - Image Processing: api-reference/image-processing.md
+      - Data Handling: api-reference/data-handling.md
+      - UI Components: api-reference/ui-components.md
 
 # Extra CSS and JS
 extra_css:
   - stylesheets/extra.css
 
-extra_javascript:
-  - javascripts/mathjax.js
-  - https://polyfill.io/v3/polyfill.min.js?features=es6
-  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+extra_javascript: []
 
 # Social links
 extra:

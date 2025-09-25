@@ -1,6 +1,23 @@
 # System Architecture
 
-The Beehive Photo Metadata Tracker follows a **multi-layered architecture** designed for performance, extensibility, and maintainability. This document provides a comprehensive overview of the system design and component interactions.
+The Beehive Photo Metadata Tracker follows a **multi-layered architecture** designed for performance, extensibility, and maintainability. This document provides both high-level understanding for users interested in how the application works, and detailed technical information for developers.
+
+!!! info "For Different Audiences"
+    - **Curious Users**: Focus on the "How It Works" and "Data Flow" sections to understand what happens to your photos
+    - **Technical Users**: The complete architecture details show how components interact and can be extended
+    - **Developers**: See the API Reference section for implementation details
+
+## How It Works (User Perspective)
+
+When you upload a beehive photo, here's what happens behind the scenes:
+
+1. **Photo Processing**: Your image is analyzed for technical details (EXIF data) and visual content (colors)
+2. **Environmental Context**: If GPS data exists, weather information is automatically retrieved
+3. **AI Analysis**: Computer vision (if configured) identifies bees, honeycomb, and other relevant features
+4. **Data Organization**: Everything is organized into inspection records with timeline visualization
+5. **Export Options**: Your structured data can be exported for external analysis
+
+This multi-step process transforms a simple photo into rich, searchable metadata while preserving all your original content.
 
 ## High-Level Architecture
 
