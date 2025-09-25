@@ -1,0 +1,357 @@
+{
+  "inspections": [
+    {
+      "date": "2023-03-03 00:00:00",
+      "location": {
+        "lat": 30.4211179,
+        "lon": -97.6798296,
+        "display": "Austin, TX"
+      },
+      "photos": [
+        {
+          "filename": "default_beepic.jpg",
+          "file_path": "data/uploads/users/default_user/1758752930_default_beepic.jpg",
+          "date_taken": "2023:03:03 13:02:47",
+          "camera_model": "Google Pixel 7",
+          "resolution": "4080 x 3072",
+          "color_palette": [
+            "#453e39",
+            "#cfcdad",
+            "#a5b6c8",
+            "#958977",
+            "#929db3"
+          ],
+          "file_size_mb": 3.7876176834106445,
+          "lat": null,
+          "lon": null,
+          "storage_metadata": {
+            "original_filename": "default_beepic.jpg",
+            "date_taken": "2023:03:03 13:02:47",
+            "camera_model": "Google Pixel 7",
+            "resolution": "4080 x 3072",
+            "file_size_mb": "3.7876176834106445",
+            "lat": null,
+            "lon": null,
+            "upload_timestamp": "2025-09-24T17:28:50.226885",
+            "safe_filename": "1758752930_default_beepic.jpg",
+            "user_id": "default_user",
+            "inspection_id": null,
+            "storage_provider": "LocalStorageProvider",
+            "storage_path": "data/uploads/users/default_user/1758752930_default_beepic.jpg",
+            "created_at": "2025-09-24T17:28:50.227607",
+            "file_size": 3971605
+          }
+        },
+        {
+          "filename": "url_image_20250924_172935.jpg",
+          "file_path": "data/uploads/users/default_user/1758752976_url_image_20250924_172935.jpg",
+          "date_taken": "2023:03:03 13:04:02",
+          "camera_model": "Google Pixel 7",
+          "resolution": "4080 x 3072",
+          "color_palette": [
+            "#4f413b",
+            "#cdc2b0",
+            "#aab3bc",
+            "#9c846e",
+            "#939eb2"
+          ],
+          "file_size_mb": 3.083348274230957,
+          "lat": null,
+          "lon": null,
+          "storage_metadata": {
+            "original_filename": "url_image_20250924_172935.jpg",
+            "date_taken": "2023:03:03 13:04:02",
+            "camera_model": "Google Pixel 7",
+            "resolution": "4080 x 3072",
+            "file_size_mb": "3.083348274230957",
+            "lat": null,
+            "lon": null,
+            "upload_timestamp": "2025-09-24T17:29:36.513713",
+            "safe_filename": "1758752976_url_image_20250924_172935.jpg",
+            "user_id": "default_user",
+            "inspection_id": null,
+            "storage_provider": "LocalStorageProvider",
+            "storage_path": "data/uploads/users/default_user/1758752976_url_image_20250924_172935.jpg",
+            "created_at": "2025-09-24T17:29:36.515183",
+            "file_size": 3233125
+          }
+        }
+      ],
+      "photo_count": 2,
+      "weather_data": {
+        "weather_datetime": "2023-03-03 00:00:00",
+        "weather_temperature_C": 15.2,
+        "weather_precipitation_mm": 0.7,
+        "weather_cloud_cover_percent": 100,
+        "weather_wind_speed_kph": 37.5,
+        "weather_code": 53,
+        "weather_source": "Open-Meteo API"
+      }
+    },
+    {
+      "date": "2020-06-01 00:00:00",
+      "location": {
+        "lat": 30.421050972222222,
+        "lon": -97.679562,
+        "display": "30.4211, -97.6796"
+      },
+      "photos": [
+        {
+          "filename": "url_image_20250924_173013.jpg",
+          "file_path": "data/uploads/users/default_user/1758753014_url_image_20250924_173013.jpg",
+          "date_taken": "2020:06:01 12:54:02",
+          "camera_model": "samsung SM-G960U1",
+          "resolution": "4032 x 3024",
+          "color_palette": [
+            "#a97e4b",
+            "#2c1b12",
+            "#e6e7e2",
+            "#653115",
+            "#e5cb98"
+          ],
+          "file_size_mb": 4.583300590515137,
+          "lat": 30.421050972222222,
+          "lon": -97.679562,
+          "storage_metadata": {
+            "original_filename": "url_image_20250924_173013.jpg",
+            "date_taken": "2020:06:01 12:54:02",
+            "camera_model": "samsung SM-G960U1",
+            "resolution": "4032 x 3024",
+            "file_size_mb": "4.583300590515137",
+            "lat": "30.421050972222222",
+            "lon": "-97.679562",
+            "upload_timestamp": "2025-09-24T17:30:14.739990",
+            "safe_filename": "1758753014_url_image_20250924_173013.jpg",
+            "user_id": "default_user",
+            "inspection_id": null,
+            "storage_provider": "LocalStorageProvider",
+            "storage_path": "data/uploads/users/default_user/1758753014_url_image_20250924_173013.jpg",
+            "created_at": "2025-09-24T17:30:14.741537",
+            "file_size": 4805939
+          }
+        },
+        {
+          "filename": "url_image_20250924_173152.jpg",
+          "file_path": "data/uploads/users/default_user/1758753113_url_image_20250924_173152.jpg",
+          "date_taken": "2020:06:01 13:06:28",
+          "camera_model": "samsung SM-G960U1",
+          "resolution": "4032 x 3024",
+          "color_palette": [
+            "#875f38",
+            "#1f1009",
+            "#d7d3c5",
+            "#d0ad78",
+            "#a6abac"
+          ],
+          "file_size_mb": 4.640965461730957,
+          "lat": 30.420798,
+          "lon": -97.679214,
+          "storage_metadata": {
+            "original_filename": "url_image_20250924_173152.jpg",
+            "date_taken": "2020:06:01 13:06:28",
+            "camera_model": "samsung SM-G960U1",
+            "resolution": "4032 x 3024",
+            "file_size_mb": "4.640965461730957",
+            "lat": "30.420798",
+            "lon": "-97.679214",
+            "upload_timestamp": "2025-09-24T17:31:53.160683",
+            "safe_filename": "1758753113_url_image_20250924_173152.jpg",
+            "user_id": "default_user",
+            "inspection_id": null,
+            "storage_provider": "LocalStorageProvider",
+            "storage_path": "data/uploads/users/default_user/1758753113_url_image_20250924_173152.jpg",
+            "created_at": "2025-09-24T17:31:53.162635",
+            "file_size": 4866405
+          }
+        }
+      ],
+      "photo_count": 2,
+      "weather_data": {
+        "weather_datetime": "2020-06-01 00:00:00",
+        "weather_temperature_C": 22.1,
+        "weather_precipitation_mm": 0.5,
+        "weather_cloud_cover_percent": 97,
+        "weather_wind_speed_kph": 9.0,
+        "weather_code": 53,
+        "weather_source": "Open-Meteo API"
+      }
+    },
+    {
+      "date": "2024-05-15 00:00:00",
+      "location": {
+        "lat": 30.420880555555556,
+        "lon": -97.67925000000001,
+        "display": "30.4209, -97.6793"
+      },
+      "photos": [
+        {
+          "filename": "PXL_20240515_192033414.jpg",
+          "file_path": "data/uploads/users/default_user/1758753046_PXL_20240515_192033414.jpg",
+          "date_taken": "2024:05:15 14:20:33",
+          "camera_model": "Google Pixel 7",
+          "resolution": "4080 x 3072",
+          "color_palette": [
+            "#6d563d",
+            "#cfc7b2",
+            "#22170f",
+            "#aeb4b5",
+            "#9d9ca4"
+          ],
+          "file_size_mb": 3.7638397216796875,
+          "lat": 30.420880555555556,
+          "lon": -97.67925000000001,
+          "storage_metadata": {
+            "original_filename": "PXL_20240515_192033414.jpg",
+            "date_taken": "2024:05:15 14:20:33",
+            "camera_model": "Google Pixel 7",
+            "resolution": "4080 x 3072",
+            "file_size_mb": "3.7638397216796875",
+            "lat": "30.420880555555556",
+            "lon": "-97.67925000000001",
+            "upload_timestamp": "2025-09-24T17:30:46.818473",
+            "safe_filename": "1758753046_PXL_20240515_192033414.jpg",
+            "user_id": "default_user",
+            "inspection_id": null,
+            "storage_provider": "LocalStorageProvider",
+            "storage_path": "data/uploads/users/default_user/1758753046_PXL_20240515_192033414.jpg",
+            "created_at": "2025-09-24T17:30:46.820086",
+            "file_size": 3946672
+          }
+        },
+        {
+          "filename": "PXL_20240515_192626527.jpg",
+          "file_path": "data/uploads/users/default_user/1758753073_PXL_20240515_192626527.jpg",
+          "date_taken": "2024:05:15 14:26:26",
+          "camera_model": "Google Pixel 7",
+          "resolution": "4080 x 3072",
+          "color_palette": [
+            "#715940",
+            "#cfc7b6",
+            "#b3c1c7",
+            "#201610",
+            "#979ba7"
+          ],
+          "file_size_mb": 4.147210121154785,
+          "lat": 30.420880555555556,
+          "lon": -97.67925000000001,
+          "storage_metadata": {
+            "original_filename": "PXL_20240515_192626527.jpg",
+            "date_taken": "2024:05:15 14:26:26",
+            "camera_model": "Google Pixel 7",
+            "resolution": "4080 x 3072",
+            "file_size_mb": "4.147210121154785",
+            "lat": "30.420880555555556",
+            "lon": "-97.67925000000001",
+            "upload_timestamp": "2025-09-24T17:31:13.344117",
+            "safe_filename": "1758753073_PXL_20240515_192626527.jpg",
+            "user_id": "default_user",
+            "inspection_id": null,
+            "storage_provider": "LocalStorageProvider",
+            "storage_path": "data/uploads/users/default_user/1758753073_PXL_20240515_192626527.jpg",
+            "created_at": "2025-09-24T17:31:13.346045",
+            "file_size": 4348665
+          }
+        }
+      ],
+      "photo_count": 2,
+      "weather_data": {
+        "weather_datetime": "2024-05-15 00:00:00",
+        "weather_temperature_C": 20.5,
+        "weather_precipitation_mm": 0.0,
+        "weather_cloud_cover_percent": 0,
+        "weather_wind_speed_kph": 7.9,
+        "weather_code": 0,
+        "weather_source": "Open-Meteo API"
+      }
+    },
+    {
+      "date": "2021-05-21 00:00:00",
+      "location": {
+        "lat": 30.420881972222222,
+        "lon": -97.67919997222222,
+        "display": "30.4209, -97.6792"
+      },
+      "photos": [
+        {
+          "filename": "20210521_144606.jpg",
+          "file_path": "data/uploads/users/default_user/1758753140_20210521_144606.jpg",
+          "date_taken": "2021:05:21 14:46:06",
+          "camera_model": "samsung SM-G960U1",
+          "resolution": "4032 x 2268",
+          "color_palette": [
+            "#8c7859",
+            "#d7d8d3",
+            "#2c1b13",
+            "#53321b",
+            "#dbc28b"
+          ],
+          "file_size_mb": 4.1763153076171875,
+          "lat": 30.420881972222222,
+          "lon": -97.67919997222222,
+          "storage_metadata": {
+            "original_filename": "20210521_144606.jpg",
+            "date_taken": "2021:05:21 14:46:06",
+            "camera_model": "samsung SM-G960U1",
+            "resolution": "4032 x 2268",
+            "file_size_mb": "4.1763153076171875",
+            "lat": "30.420881972222222",
+            "lon": "-97.67919997222222",
+            "upload_timestamp": "2025-09-24T17:32:20.237239",
+            "safe_filename": "1758753140_20210521_144606.jpg",
+            "user_id": "default_user",
+            "inspection_id": null,
+            "storage_provider": "LocalStorageProvider",
+            "storage_path": "data/uploads/users/default_user/1758753140_20210521_144606.jpg",
+            "created_at": "2025-09-24T17:32:20.238852",
+            "file_size": 4379184
+          }
+        },
+        {
+          "filename": "20210521_144742.jpg",
+          "file_path": "data/uploads/users/default_user/1758753149_20210521_144742.jpg",
+          "date_taken": "2021:05:21 14:47:42",
+          "camera_model": "samsung SM-G960U1",
+          "resolution": "4032 x 2268",
+          "color_palette": [
+            "#c9b691",
+            "#3b2a16",
+            "#6f4723",
+            "#9f7e2a",
+            "#d8dde2"
+          ],
+          "file_size_mb": 3.358077049255371,
+          "lat": 30.420835,
+          "lon": -97.679184,
+          "storage_metadata": {
+            "original_filename": "20210521_144742.jpg",
+            "date_taken": "2021:05:21 14:47:42",
+            "camera_model": "samsung SM-G960U1",
+            "resolution": "4032 x 2268",
+            "file_size_mb": "3.358077049255371",
+            "lat": "30.420835",
+            "lon": "-97.679184",
+            "upload_timestamp": "2025-09-24T17:32:29.121933",
+            "safe_filename": "1758753149_20210521_144742.jpg",
+            "user_id": "default_user",
+            "inspection_id": null,
+            "storage_provider": "LocalStorageProvider",
+            "storage_path": "data/uploads/users/default_user/1758753149_20210521_144742.jpg",
+            "created_at": "2025-09-24T17:32:29.123775",
+            "file_size": 3521199
+          }
+        }
+      ],
+      "photo_count": 2,
+      "weather_data": {
+        "weather_datetime": "2021-05-21 00:00:00",
+        "weather_temperature_C": 20.9,
+        "weather_precipitation_mm": 0.0,
+        "weather_cloud_cover_percent": 0,
+        "weather_wind_speed_kph": 10.4,
+        "weather_code": 0,
+        "weather_source": "Open-Meteo API"
+      }
+    }
+  ],
+  "last_save": "2025-09-24T18:17:15.526183"
+}

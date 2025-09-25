@@ -1,0 +1,48 @@
+{
+  "provider_type": "local",
+  "auto_migrate": false,
+  "enable_thumbnails": true,
+  "thumbnail_size": [
+    200,
+    200
+  ],
+  "metadata_storage": true,
+  "providers": {
+    "local": {
+      "base_path": "data/uploads",
+      "create_dirs": true,
+      "preserve_structure": true,
+      "max_file_size_mb": 50
+    },
+    "s3": {
+      "bucket_name": null,
+      "region": "us-east-1",
+      "use_ssl": true,
+      "create_bucket": false,
+      "storage_class": "STANDARD",
+      "server_side_encryption": "AES256"
+    },
+    "gcs": {
+      "bucket_name": null,
+      "project_id": null,
+      "credentials_path": "/Users/bhs/key.json",
+      "create_bucket": false,
+      "storage_class": "STANDARD"
+    }
+  },
+  "security": {
+    "signed_url_expiry": 3600,
+    "require_authentication": true,
+    "encrypt_metadata": false
+  },
+  "performance": {
+    "concurrent_uploads": 3,
+    "chunk_size_mb": 5,
+    "retry_attempts": 3,
+    "timeout_seconds": 30
+  },
+  "_metadata": {
+    "saved_at": "2025-09-24T17:34:52.191900",
+    "version": "1.0"
+  }
+}
