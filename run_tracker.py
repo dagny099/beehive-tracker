@@ -38,6 +38,7 @@ logout_page = st.Page(logout, title="Log out", icon=":material/logout:")
 dashboard = st.Page("src/app.py", title="Dashboard", icon=":material/dashboard:", default=True)
 calendar = st.Page("src/calendar_view.py", title="Calendar", icon=":material/calendar_month:")
 gallery = st.Page("src/gallery_view.py", title="Photo Gallery", icon=":material/photo_library:")
+bulk_import = st.Page("src/bulk_import_page.py", title="Bulk Import", icon=":material/upload:")
 storage = st.Page("src/pages/Storage_Management.py", title="Storage", icon=":material/cloud:")
 
 # Add more pages as they become available
@@ -48,8 +49,8 @@ if st.session_state.logged_in:
     pg = st.navigation(
         {
             "Hive Tracker": [dashboard],
-            "Views": [calendar],
-            "Management": [storage],
+            "Views": [calendar, gallery],
+            "Management": [bulk_import, storage],
             # "Analytics": [trends],
             "Account": [logout_page],
         }

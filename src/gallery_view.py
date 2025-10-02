@@ -19,10 +19,23 @@ def main():
         st.info("No inspections available. Start by uploading hive photos.")
         return
     
-    # Sort inspections by date
+    # Sort inspections by date - handle multiple date formats
+    def parse_date(inspection):
+        date_val = inspection['date']
+        if isinstance(date_val, datetime):
+            return date_val
+        # Try multiple formats
+        for fmt in ["%Y:%m:%d %H:%M:%S", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d"]:
+            try:
+                return datetime.strptime(date_val, fmt)
+            except:
+                continue
+        # If all fail, return a default old date
+        return datetime(2000, 1, 1)
+
     sorted_inspections = sorted(
-        enumerate(st.session_state.inspections), 
-        key=lambda x: x[1]['date'] if isinstance(x[1]['date'], datetime) else datetime.strptime(x[1]['date'], "%Y:%m:%d %H:%M:%S")
+        enumerate(st.session_state.inspections),
+        key=lambda x: parse_date(x[1])
     )
     
     # Create a dropdown to select inspection

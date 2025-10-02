@@ -219,9 +219,7 @@ def load_inspections_from_disk():
                             if "file_path" in photo and os.path.exists(photo["file_path"]):
                                 # Photo file exists, keep it
                                 valid_photos.append(photo)
-                            else:
-                                # Log missing file
-                                st.warning(f"Photo file not found: {photo.get('filename', 'unknown')}")
+                            # Silently skip missing files during load
                         
                         # Update with only valid photos
                         inspection["photos"] = valid_photos
@@ -282,20 +280,22 @@ def load_inspections_from_disk():
                 if migration_needed:
                     st.session_state.inspections = migrated_inspections
                     save_inspections_to_disk()
-                    st.success(f"✅ Migrated {len(migrated_inspections)} inspection(s) to new format with location and weather data")
+                    # Migration happened silently - no UI message needed
 
                 # Set in session state
                 st.session_state.inspections = migrated_inspections
 
                 return True
             else:
-                st.warning("No inspection data found in saved file.")
+                # No inspection data in file
                 return False
         else:
-            st.info("No saved data found. Starting with empty inspections.")
+            # No saved data file exists yet
             return False
     except Exception as e:
-        st.error(f"Error loading data: {e}")
+        # Log error but don't show UI message during initialization
+        import sys
+        print(f"Error loading data: {e}", file=sys.stderr)
         return False
 
 def add_photo_to_inspection(photo_data):
@@ -492,8 +492,72 @@ def export_inspection_data(format="json"):
             return json_data, None
         
         elif format == "csv":
-            # This would need pandas to implement properly
-            return None, "CSV export not implemented yet"
+            # Flatten inspection data for CSV export using pandas
+            import pandas as pd
+
+            # Prepare flattened data for CSV
+            flattened_data = []
+
+            for inspection in st.session_state.inspections:
+                # Base inspection data
+                base_data = {
+                    'inspection_id': inspection.get('id', ''),
+                    'inspection_date': inspection.get('date', ''),
+                    'inspection_notes': inspection.get('notes', ''),
+                    'location_name': inspection.get('location', {}).get('name', ''),
+                    'location_lat': inspection.get('location', {}).get('lat', ''),
+                    'location_lon': inspection.get('location', {}).get('lon', ''),
+                    'weather_temperature_c': inspection.get('weather_data', {}).get('temperature_c', ''),
+                    'weather_humidity_percent': inspection.get('weather_data', {}).get('humidity_percent', ''),
+                    'weather_wind_speed_kmh': inspection.get('weather_data', {}).get('wind_speed_kmh', ''),
+                    'weather_precipitation_mm': inspection.get('weather_data', {}).get('precipitation_mm', ''),
+                    'weather_description': inspection.get('weather_data', {}).get('description', ''),
+                    'photo_count': len(inspection.get('photos', []))
+                }
+
+                # If there are photos, create a row for each photo
+                if inspection.get('photos'):
+                    for idx, photo in enumerate(inspection['photos']):
+                        photo_data = base_data.copy()
+                        photo_data.update({
+                            'photo_index': idx + 1,
+                            'photo_filename': photo.get('filename', ''),
+                            'photo_file_size': photo.get('file_size', ''),
+                            'photo_timestamp': photo.get('timestamp', ''),
+                            'photo_camera_make': photo.get('camera_make', ''),
+                            'photo_camera_model': photo.get('camera_model', ''),
+                            'photo_gps_lat': photo.get('gps_coordinates', {}).get('lat', ''),
+                            'photo_gps_lon': photo.get('gps_coordinates', {}).get('lon', ''),
+                            'photo_colors': ', '.join(photo.get('colors', [])),
+                            'vision_labels': ', '.join([label.get('description', '') for label in photo.get('vision_analysis', {}).get('labels', [])]),
+                            'vision_confidence': ', '.join([str(label.get('score', '')) for label in photo.get('vision_analysis', {}).get('labels', [])])
+                        })
+                        flattened_data.append(photo_data)
+                else:
+                    # If no photos, still include the inspection data
+                    photo_data = base_data.copy()
+                    photo_data.update({
+                        'photo_index': 0,
+                        'photo_filename': '',
+                        'photo_file_size': '',
+                        'photo_timestamp': '',
+                        'photo_camera_make': '',
+                        'photo_camera_model': '',
+                        'photo_gps_lat': '',
+                        'photo_gps_lon': '',
+                        'photo_colors': '',
+                        'vision_labels': '',
+                        'vision_confidence': ''
+                    })
+                    flattened_data.append(photo_data)
+
+            # Create DataFrame and convert to CSV
+            if flattened_data:
+                df = pd.DataFrame(flattened_data)
+                csv_data = df.to_csv(index=False)
+                return csv_data, None
+            else:
+                return None, "No data to export"
         
         else:
             return None, f"Unsupported export format: {format}"

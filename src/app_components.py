@@ -6,6 +6,7 @@ from PIL import Image
 from datetime import datetime
 import os
 import json
+import glob
 from src.timeline_component import format_location_for_display
 from src.utils.data_handler import add_photo_to_inspection
 from src.api_services.weather import get_weather_open_meteo
@@ -86,6 +87,43 @@ def display_inspection_metadata():
     <h3 style="color: #8B4513; margin-top: 0; text-shadow: 1px 1px 2px rgba(255,255,255,0.8); font-weight: 700;">🔍 Inspection Overview</h3>
     </div>
     """, unsafe_allow_html=True)
+
+    # Show total inspections summary
+    if 'inspections' in st.session_state and st.session_state.inspections:
+        num_inspections = len(st.session_state.inspections)
+        total_photos = sum(insp.get('photo_count', 0) for insp in st.session_state.inspections)
+
+        # Get date range
+        dates = []
+        for insp in st.session_state.inspections:
+            d = insp.get('date')
+            if isinstance(d, datetime):
+                dates.append(d)
+            elif isinstance(d, str):
+                try:
+                    dates.append(datetime.fromisoformat(d))
+                except:
+                    pass
+
+        if dates:
+            latest = max(dates).strftime('%B %d, %Y')
+            first = min(dates).strftime('%B %d, %Y')
+
+            st.markdown(f"""
+            <div style="
+                background: rgba(255, 195, 0, 0.1);
+                border-left: 4px solid #FFC300;
+                padding: 12px;
+                margin-bottom: 20px;
+                border-radius: 5px;
+            ">
+                <p style="margin: 0; color: #ccc; font-size: 14px;">
+                    <strong>{num_inspections}</strong> inspection{"s" if num_inspections != 1 else ""} •
+                    <strong>{total_photos}</strong> photo{"s" if total_photos != 1 else ""} •
+                    {first} to {latest}
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
 
     # Add inspection dropdown selector
     if 'inspections' in st.session_state and st.session_state.inspections:
@@ -374,10 +412,6 @@ def render_sidebar():
         if st.button("Export Data (JSON)", key="export_button"):
             if st.session_state.inspections:
                 # Export current data to JSON file
-                import json
-                from datetime import datetime
-                import os
-
                 export_data = {
                     "inspections": st.session_state.inspections,
                     "exported_at": datetime.now().isoformat()
@@ -398,12 +432,47 @@ def render_sidebar():
             else:
                 st.warning("No data to export")
 
+        # Load Latest Backup option (moved from main app)
+        export_dir = "data/exports"
+        if os.path.exists(export_dir):
+            export_files = glob.glob(os.path.join(export_dir, "inspections_export_*.json"))
+            if export_files:
+                # Find the most recent export
+                latest_export = max(export_files, key=os.path.getctime)
+                export_name = os.path.basename(latest_export)
+
+                if st.button("📁 Load Backup", key="load_backup_sidebar", help=f"Load: {export_name}"):
+                    try:
+                        with open(latest_export, 'r') as f:
+                            import_data = json.load(f)
+
+                        if 'inspections' in import_data:
+                            st.session_state.inspections = import_data['inspections']
+                            st.session_state.data_manually_cleared = False  # Clear the flag - data is now loaded
+                            from src.utils.data_handler import save_inspections_to_disk
+                            save_inspections_to_disk()
+
+                            # Load first photo to display inspection overview
+                            if import_data['inspections'] and import_data['inspections'][0].get('photos'):
+                                first_photo = import_data['inspections'][0]['photos'][0]
+                                from src.utils.session_manager import load_photo_into_session_state
+                                try:
+                                    load_photo_into_session_state(first_photo)
+                                    st.session_state.selected_inspection = 0
+                                except Exception as e:
+                                    st.warning(f"Could not load first photo for display: {e}")
+
+                            st.success(f"✅ Loaded {len(import_data['inspections'])} inspections")
+                            st.rerun()
+                        else:
+                            st.error("Invalid backup format")
+                    except Exception as e:
+                        st.error(f"Failed to load backup: {e}")
+
         # Import data option
         uploaded_json = st.file_uploader("Import JSON Data", type=["json"], key="import_json")
         if uploaded_json is not None:
             try:
-                import json
-                import os
                 import_data = json.load(uploaded_json)
 
                 if 'inspections' in import_data:
@@ -420,6 +489,18 @@ def render_sidebar():
 
                     # Load inspections into session state
                     st.session_state.inspections = import_data['inspections']
+                    st.session_state.data_manually_cleared = False  # Clear the flag - data is now loaded
+
+                    # Load first photo to display inspection overview (same as main app)
+                    if import_data['inspections'] and import_data['inspections'][0].get('photos'):
+                        first_photo = import_data['inspections'][0]['photos'][0]
+                        # Set session state to display this photo with ALL metadata
+                        from src.utils.session_manager import load_photo_into_session_state
+                        try:
+                            load_photo_into_session_state(first_photo)
+                            st.session_state.selected_inspection = 0
+                        except Exception as e:
+                            st.warning(f"Could not load first photo for display: {e}")
 
                     # Save to main data file
                     from src.utils.data_handler import save_inspections_to_disk
@@ -457,7 +538,6 @@ def render_sidebar():
                 st.rerun()
 
         # Show upload directory size
-        import os
         upload_dir = "data/uploads/users/default_user"
         if os.path.exists(upload_dir):
             files = [f for f in os.listdir(upload_dir) if f.endswith(('.jpg', '.jpeg', '.png'))]

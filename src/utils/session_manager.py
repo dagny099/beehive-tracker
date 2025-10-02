@@ -74,9 +74,62 @@ def initialize_full_session_state():
     # Image caching
     if 'url_image_cache' not in st.session_state:
         st.session_state.url_image_cache = {}
-    
+
     # Load saved data if available
     load_data_from_disk()
+
+def load_photo_into_session_state(photo_data, image_path=None):
+    """
+    Load all photo metadata into session state variables for proper display.
+    Used when loading from JSON backup or selecting photos from inspections.
+
+    Args:
+        photo_data (dict): Photo data from inspection JSON
+        image_path (str, optional): Override path to image file
+    """
+    from PIL import Image
+    import os
+
+    # Set current image if path provided and file exists
+    if image_path and os.path.exists(image_path):
+        st.session_state.current_image = Image.open(image_path)
+    elif 'file_path' in photo_data and os.path.exists(photo_data['file_path']):
+        st.session_state.current_image = Image.open(photo_data['file_path'])
+    else:
+        st.session_state.current_image = None
+
+    # Basic photo metadata
+    st.session_state.filename = photo_data.get('filename', 'Unknown')
+    st.session_state.date_taken = photo_data.get('date_taken', 'Unknown')
+    st.session_state.date_source = photo_data.get('date_source', 'EXIF')  # Default source
+    st.session_state.camera_model = photo_data.get('camera_model', 'Unknown')
+    # Handle both 'resolution' and 'image_resolution' field names
+    st.session_state.image_resolution = photo_data.get('image_resolution') or photo_data.get('resolution', 'Unknown')
+
+    # GPS coordinates
+    st.session_state.lat = photo_data.get('lat')
+    st.session_state.lon = photo_data.get('lon')
+
+    # Color analysis - handle both field names
+    st.session_state.palette_hex = photo_data.get('palette_hex') or photo_data.get('color_palette', ["#CCCCCC", "#DDDDDD", "#EEEEEE"])
+
+    # Vision API results
+    st.session_state.vision_api_results = photo_data.get('vision_api_results')
+
+    # Weather info - extract from photo data or use defaults
+    weather_data = photo_data.get('weather_info', {})
+    st.session_state.weather_info = {
+        "weather_temperature_C": weather_data.get('weather_temperature_C'),
+        "weather_precipitation_mm": weather_data.get('weather_precipitation_mm'),
+        "weather_cloud_cover_percent": weather_data.get('weather_cloud_cover_percent'),
+        "weather_wind_speed_kph": weather_data.get('weather_wind_speed_kph'),
+        "weather_code": weather_data.get('weather_code'),
+        "weather_source": weather_data.get('weather_source', 'Not retrieved')
+    }
+    st.session_state.weather_fetched = bool(weather_data.get('weather_temperature_C'))
+
+    # Processing flags
+    st.session_state.processing_complete = True
 
 def save_data_to_disk():
     """Save inspection data to disk"""

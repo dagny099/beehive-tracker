@@ -7,6 +7,9 @@ import io
 import base64
 import requests
 from urllib.parse import urlparse
+import os
+import glob
+import json
 
 # Updated initialize_session_state function
 def initialize_session_state():
@@ -64,6 +67,18 @@ def initialize_session_state():
     # Image caching
     if 'url_image_cache' not in st.session_state:
         st.session_state.url_image_cache = {}
+
+    # Flag to track if user manually cleared data
+    if 'data_manually_cleared' not in st.session_state:
+        st.session_state.data_manually_cleared = False
+
+    # DO NOT auto-load data from disk on initialization
+    # This ensures browser refresh gives a clean state
+    # Data is only loaded when user explicitly:
+    # - Uses "Load Backup" button
+    # - Completes a bulk import
+    # - Uploads a photo
+    # This creates intuitive behavior: refresh = clean slate
 
 
 
@@ -330,13 +345,32 @@ def render_inspection_cards():
     if not st.session_state.inspections:
         return
 
+    # Sort inspections by date (most recent first)
+    def parse_date(inspection):
+        date_val = inspection.get('date')
+        if isinstance(date_val, datetime):
+            return date_val
+        # Try multiple formats
+        for fmt in ["%Y:%m:%d %H:%M:%S", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d"]:
+            try:
+                return datetime.strptime(date_val, fmt)
+            except:
+                continue
+        return datetime(2000, 1, 1)
+
+    sorted_inspections = sorted(
+        enumerate(st.session_state.inspections),
+        key=lambda x: parse_date(x[1]),
+        reverse=False  # Oldest first (chronological order)
+    )
+
     # Create columns for card layout - only create as many columns as needed
-    num_inspections = len(st.session_state.inspections)
+    num_inspections = len(sorted_inspections)
     num_cols = min(3, num_inspections)  # Don't create more columns than inspections
     cols = st.columns(num_cols)
 
-    for i, inspection in enumerate(st.session_state.inspections):
-        col = cols[i % num_cols]
+    for card_idx, (i, inspection) in enumerate(sorted_inspections):
+        col = cols[card_idx % num_cols]
 
         # Skip if inspection data is invalid
         if not inspection or not isinstance(inspection, dict):
@@ -364,7 +398,8 @@ def render_inspection_cards():
             precip = weather_data.get('weather_precipitation_mm', 'N/A')
             cloud = weather_data.get('weather_cloud_cover_percent', 'N/A')
             wind = weather_data.get('weather_wind_speed_kph', 'N/A')
-            weather_text = f"🌡️{temp}°C • 💧{precip}mm • ☁️{cloud}% • 💨{wind}kph"
+            # Using 🍃 for wind (leaf blowing in wind - clearer at small size)
+            weather_text = f"🌡️ {temp}°C • 💧 {precip}mm • ☁️ {cloud}% • 🍃 {wind}kph"
         else:
             weather_text = "Weather data not available"
 
@@ -391,22 +426,22 @@ def render_inspection_cards():
                         font-weight: bold;
                         padding: 8px 12px;
                         border-radius: 6px;
-                        font-size: 18px;
+                        font-size: 1.625rem;
                     ">🐝</div>
                     <div style="
                         color: #FFC300;
                         font-weight: 600;
-                        font-size: 14px;
+                        font-size: 1.5rem;
                         line-height: 1.3;
                     ">{inspection_title}</div>
                 </div>
                 <div style="
                     color: #ccc;
-                    font-size: 13px;
-                    line-height: 1.4;
+                    font-size: 1.375rem;
+                    line-height: 1.5;
                 ">
                     <div style="margin-bottom: 4px;">📸 {photo_count} photos</div>
-                    <div style="margin-bottom: 4px; font-size: 12px;">{weather_text}</div>
+                    <div style="margin-bottom: 4px; font-size: 1.25rem;">{weather_text}</div>
                     <div style="color: #FFE066;">{location_text}</div>
                 </div>
             </div>
@@ -435,9 +470,7 @@ def render_timeline():
     </div>
     """, unsafe_allow_html=True)
 
-    # Render inspection summary if inspections exist
-    if st.session_state.inspections:
-        render_inspection_summary()
+    # Summary moved to Inspection Overview section - no longer shown here
 
     # Use the appropriate timeline based on whether inspections exist
     if st.session_state.inspections:
@@ -450,26 +483,107 @@ def render_timeline():
 
     # Render inspection cards if inspections exist
     if st.session_state.inspections:
-        st.markdown("### Inspection Details")
+        # Create columns for header and clear button
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.markdown("### Inspection Details")
+        with col2:
+            if st.button("🗑️ Clear Data", key="clear_timeline_data", help="Clear timeline data from view (does not delete saved files)"):
+                # Clear session state inspections and set flag to prevent auto-reload
+                st.session_state.inspections = []
+                st.session_state.selected_inspection = None
+                st.session_state.current_image = None
+                st.session_state.data_manually_cleared = True  # Prevent auto-reload
+
+                # Reset bulk import state so it returns to Step 1
+                if 'bulk_import_state' in st.session_state:
+                    st.session_state.bulk_import_state = {
+                        'step': 1,
+                        'source_type': None,
+                        'config': {},
+                        'discovered_photos': [],
+                        'processed_photos': [],
+                        'failed_photos': []
+                    }
+
+                st.rerun()
+
         render_inspection_cards()
     else:
-        # Enhanced empty state
-        st.markdown("""
-        <div style="
-            text-align: center;
-            color: #999;
-            padding: 40px;
-            font-style: italic;
-            background: rgba(255, 195, 0, 0.05);
-            border-radius: 10px;
-            border-left: 4px solid #FFC300;
-            margin-top: 20px;
-        ">
-            <div style="font-size: 48px; margin-bottom: 10px;">🐝</div>
-            <p style="font-size: 16px; margin-bottom: 8px;">No inspections yet</p>
-            <p style="font-size: 14px; color: #777;">Start by uploading a hive photo to create your first inspection record</p>
-        </div>
-        """, unsafe_allow_html=True)
+        # Enhanced empty state - show different messages based on context
+        if st.session_state.data_manually_cleared:
+            # User manually cleared - offer to restore
+            st.markdown("""
+            <div style="
+                text-align: center;
+                color: #999;
+                padding: 40px;
+                font-style: italic;
+                background: rgba(255, 195, 0, 0.05);
+                border-radius: 10px;
+                border-left: 4px solid #FFC300;
+                margin-top: 20px;
+            ">
+                <div style="font-size: 48px; margin-bottom: 10px;">🐝</div>
+                <p style="font-size: 16px; margin-bottom: 8px;">Timeline cleared</p>
+                <p style="font-size: 14px; color: #777;">Your data is safely saved to disk</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # Add Load Backup button right here in the empty state
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            # Check if backup exists
+            export_dir = "data/exports"
+            if os.path.exists(export_dir):
+                export_files = glob.glob(os.path.join(export_dir, "inspections_export_*.json"))
+                if export_files:
+                    latest_export = max(export_files, key=os.path.getctime)
+                    export_name = os.path.basename(latest_export)
+
+                    col1, col2, col3 = st.columns([1, 1, 1])
+                    with col2:
+                        if st.button("📁 Load Backup", key="load_backup_timeline", help=f"Restore from: {export_name}", type="primary"):
+                            try:
+                                with open(latest_export, 'r') as f:
+                                    import_data = json.load(f)
+
+                                if 'inspections' in import_data:
+                                    st.session_state.inspections = import_data['inspections']
+                                    st.session_state.data_manually_cleared = False
+
+                                    # Load first photo
+                                    if import_data['inspections'] and import_data['inspections'][0].get('photos'):
+                                        first_photo = import_data['inspections'][0]['photos'][0]
+                                        from src.utils.session_manager import load_photo_into_session_state
+                                        try:
+                                            load_photo_into_session_state(first_photo)
+                                            st.session_state.selected_inspection = 0
+                                        except:
+                                            pass
+
+                                    st.success(f"✅ Loaded {len(import_data['inspections'])} inspections")
+                                    st.rerun()
+                            except Exception as e:
+                                st.error(f"Failed to load backup: {e}")
+        else:
+            # Truly no data - show upload prompt
+            st.markdown("""
+            <div style="
+                text-align: center;
+                color: #999;
+                padding: 40px;
+                font-style: italic;
+                background: rgba(255, 195, 0, 0.05);
+                border-radius: 10px;
+                border-left: 4px solid #FFC300;
+                margin-top: 20px;
+            ">
+                <div style="font-size: 48px; margin-bottom: 10px;">🐝</div>
+                <p style="font-size: 16px; margin-bottom: 8px;">No inspections yet</p>
+                <p style="font-size: 14px; color: #777;">Start by uploading a hive photo to create your first inspection record</p>
+            </div>
+            """, unsafe_allow_html=True)
 
     return timeline
 

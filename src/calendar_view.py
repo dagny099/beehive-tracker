@@ -39,7 +39,7 @@ def main():
         # Sort inspections by date
         sorted_inspections = sorted(
             enumerate(st.session_state.inspections), 
-            key=lambda x: x[1]['date'] if isinstance(x[1]['date'], datetime) else datetime.strptime(x[1]['date'], "%Y:%m:%d %H:%M:%S")
+            key=lambda x: x[1]['date'] if isinstance(x[1]['date'], datetime) else datetime.strptime(x[1]['date'], "%Y-%m-%d %H:%M:%S")
         )
         
         # Generate events and resources for calendar
@@ -52,7 +52,7 @@ def main():
                 date_obj = inspection['date']
             else:
                 try:
-                    date_obj = datetime.strptime(inspection['date'], "%Y:%m:%d %H:%M:%S")
+                    date_obj = datetime.strptime(inspection['date'], "%Y-%m-%d %H:%M:%S")
                 except:
                     # Try to parse with a fallback format
                     try:

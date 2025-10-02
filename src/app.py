@@ -76,50 +76,9 @@ def main():
     
     # Initialize session state
     initialize_session_state()
-    
-    # Check for latest backup to load
-    import glob
-    import os
-    export_dir = "data/exports"
-    if os.path.exists(export_dir):
-        export_files = glob.glob(os.path.join(export_dir, "inspections_export_*.json"))
-        if export_files:
-            # Find the most recent export
-            latest_export = max(export_files, key=os.path.getctime)
-            export_name = os.path.basename(latest_export)
 
-            if st.button(f"📁 Load Latest Backup ({export_name})", key="load_backup", help="Load your most recent data export"):
-                try:
-                    import json
-                    with open(latest_export, 'r') as f:
-                        import_data = json.load(f)
-
-                    if 'inspections' in import_data:
-                        st.session_state.inspections = import_data['inspections']
-                        from src.utils.data_handler import save_inspections_to_disk
-                        save_inspections_to_disk()
-
-                        # Load first photo to display inspection overview
-                        if import_data['inspections'] and import_data['inspections'][0].get('photos'):
-                            first_photo = import_data['inspections'][0]['photos'][0]
-                            # Set session state to display this photo
-                            from PIL import Image
-                            import os
-                            if os.path.exists(first_photo['file_path']):
-                                st.session_state.current_image = Image.open(first_photo['file_path'])
-                                st.session_state.filename = first_photo['filename']
-                                st.session_state.selected_inspection = 0
-
-                        st.success(f"✅ Loaded {len(import_data['inspections'])} inspections from backup")
-                        st.rerun()
-                    else:
-                        st.error("Invalid backup format")
-                except Exception as e:
-                    st.error(f"Failed to load backup: {e}")
-
-
-    
     # App content (header moved to sidebar)
+    # Note: "Load Latest Backup" button moved to sidebar in app_components.py
     
     # Render the timeline with some margin
     st.markdown('<div style="margin: 15px 0;"></div>', unsafe_allow_html=True)
