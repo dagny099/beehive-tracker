@@ -72,13 +72,19 @@ def initialize_session_state():
     if 'data_manually_cleared' not in st.session_state:
         st.session_state.data_manually_cleared = False
 
-    # DO NOT auto-load data from disk on initialization
-    # This ensures browser refresh gives a clean state
-    # Data is only loaded when user explicitly:
-    # - Uses "Load Backup" button
-    # - Completes a bulk import
-    # - Uploads a photo
-    # This creates intuitive behavior: refresh = clean slate
+    # Auto-load data from disk on initialization (prefers latest backup)
+    if 'inspections' not in st.session_state or len(st.session_state.inspections) == 0:
+        if not st.session_state.get('data_manually_cleared', False):
+            from src.utils.session_manager import load_data_from_disk, load_photo_into_session_state
+            if load_data_from_disk():
+                # Load first photo to display inspection overview
+                if st.session_state.inspections and st.session_state.inspections[0].get('photos'):
+                    first_photo = st.session_state.inspections[0]['photos'][0]
+                    try:
+                        load_photo_into_session_state(first_photo)
+                        st.session_state.selected_inspection = 0
+                    except Exception as e:
+                        pass  # Silently fail on startup if photo can't be loaded
 
 
 

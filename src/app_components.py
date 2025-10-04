@@ -303,21 +303,23 @@ def display_photo_analysis():
 # Function to display the image upload options
 def display_image_upload_options(in_sidebar=True, expanded=True):
     """Display image upload options either in sidebar or main content"""
-    
+
     # Choose where to display based on the parameter
     container = st.sidebar if in_sidebar else st
-    
-    with container.expander("📤 Upload Image", expanded=expanded):
+
+    with container.expander("📸 Add Photos", expanded=expanded):
         # URL input option
-        container.markdown("### Enter an Image URL")
-        img_url = container.text_input(
-            "Image URL", 
-            value="https://drive.google.com/uc?export=view&id=1qbvRpDnseTcq1fd69wKkTUl5VDZMO4Vc",
+        st.markdown("**From URL**")
+        img_url = st.text_input(
+            "Image URL",
+            value="",
+            placeholder="https://example.com/image.jpg",
             help="Enter the URL of a beehive photo",
-            key="img_url_input"
+            key="img_url_input",
+            label_visibility="collapsed"
         )
-        
-        if container.button("Process URL Image", key="url_button"):
+
+        if st.button("Process URL", key="url_button", use_container_width=True):
             if img_url:
                 # Only process if it's a new URL or previous processing failed
                 if 'last_processed_url' not in st.session_state or st.session_state.last_processed_url != img_url:
@@ -329,9 +331,9 @@ def display_image_upload_options(in_sidebar=True, expanded=True):
                             # Add photo to appropriate inspection
                             from src.utils.data_handler import add_photo_to_inspection
                             add_photo_to_inspection(photo_data)
-                            
+
                             st.session_state.last_processed_url = img_url
-                            
+
                             # Force rerun to update UI
                             st.rerun()
                 else:
@@ -340,11 +342,11 @@ def display_image_upload_options(in_sidebar=True, expanded=True):
                 st.warning("Please enter a valid image URL")
 
         # Add some space between the two options
-        container.markdown("<hr style='margin: 10px 0'>", unsafe_allow_html=True)
-        
+        st.markdown('<div style="margin: 15px 0;"></div>', unsafe_allow_html=True)
+
         # File upload option
-        container.markdown("### Upload an Image")
-        uploaded_file = container.file_uploader("Choose an image file", type=["jpg", "jpeg", "png"], key="file_uploader")
+        st.markdown("**From Device**")
+        uploaded_file = st.file_uploader("Choose an image file", type=["jpg", "jpeg", "png"], key="file_uploader", label_visibility="collapsed")
         
         if uploaded_file is not None:
             # Check if this is a new file upload
@@ -386,163 +388,236 @@ def update_timeline():
 # Function to render the sidebar with inspection list
 def render_sidebar():
     with st.sidebar:
-        # Add main app header at top of sidebar
-        st.markdown("# 🐝 Hive Photo Metadata Tracker")
-        st.markdown("<hr>", unsafe_allow_html=True)
+        # Compact header with better hierarchy
+        st.markdown("### 🐝 Hive Photo Metadata Tracker")
+        st.markdown('<div style="margin-bottom: 10px;"></div>', unsafe_allow_html=True)
 
-        # First add the image upload section
-        display_image_upload_options(in_sidebar=True, expanded=True)
+        has_data = st.session_state.inspections and len(st.session_state.inspections) > 0
 
-        # Add some space
-        st.markdown("<hr>", unsafe_allow_html=True)
+        if has_data:
+            num_inspections = len(st.session_state.inspections)
+            total_photos = sum(insp['photo_count'] for insp in st.session_state.inspections)
 
-        # Then show inspection details
-        st.header("Inspection Details")
-        
-        if st.session_state.inspections:
-            st.write(f"Total Inspections: {len(st.session_state.inspections)}")
-            st.write(f"Total Photos: {sum(insp['photo_count'] for insp in st.session_state.inspections)}")
-            
-            # Note: Inspection selection is now handled via dropdown on main dashboard
-        else:
-            st.info("No inspections recorded yet. Start by uploading a hive photo.")
-        
-        # Export data option with functional implementation
-        st.subheader("Data Management")
-        if st.button("Export Data (JSON)", key="export_button"):
-            if st.session_state.inspections:
-                # Export current data to JSON file
-                export_data = {
-                    "inspections": st.session_state.inspections,
-                    "exported_at": datetime.now().isoformat()
-                }
-
-                # Ensure exports directory exists
-                os.makedirs("data/exports", exist_ok=True)
-
-                # Create filename with timestamp
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                filename = f"data/exports/inspections_export_{timestamp}.json"
-
-                # Save to file
-                with open(filename, 'w') as f:
-                    json.dump(export_data, f, indent=2, default=str)
-
-                st.success(f"Data exported to {filename}")
-            else:
-                st.warning("No data to export")
-
-        # Load Latest Backup option (moved from main app)
-        export_dir = "data/exports"
-        if os.path.exists(export_dir):
-            export_files = glob.glob(os.path.join(export_dir, "inspections_export_*.json"))
-            if export_files:
-                # Find the most recent export
-                latest_export = max(export_files, key=os.path.getctime)
-                export_name = os.path.basename(latest_export)
-
-                if st.button("📁 Load Backup", key="load_backup_sidebar", help=f"Load: {export_name}"):
+            # Get date range
+            dates = []
+            for insp in st.session_state.inspections:
+                d = insp.get('date')
+                if isinstance(d, datetime):
+                    dates.append(d)
+                elif isinstance(d, str):
                     try:
-                        with open(latest_export, 'r') as f:
-                            import_data = json.load(f)
+                        dates.append(datetime.fromisoformat(d))
+                    except:
+                        pass
 
-                        if 'inspections' in import_data:
-                            st.session_state.inspections = import_data['inspections']
-                            st.session_state.data_manually_cleared = False  # Clear the flag - data is now loaded
-                            from src.utils.data_handler import save_inspections_to_disk
-                            save_inspections_to_disk()
+            date_range = ""
+            if dates:
+                latest = max(dates).strftime('%b %d, %Y')
+                first = min(dates).strftime('%b %d, %Y')
+                if first != latest:
+                    date_range = f"{first} - {latest}"
+                else:
+                    date_range = first
 
-                            # Load first photo to display inspection overview
-                            if import_data['inspections'] and import_data['inspections'][0].get('photos'):
-                                first_photo = import_data['inspections'][0]['photos'][0]
-                                from src.utils.session_manager import load_photo_into_session_state
-                                try:
-                                    load_photo_into_session_state(first_photo)
-                                    st.session_state.selected_inspection = 0
-                                except Exception as e:
-                                    st.warning(f"Could not load first photo for display: {e}")
+            # Compact stats display
+            # Data summary section with heading
+            st.markdown("Data Summary:")
+            st.markdown('<div style="margin-bottom: 5px;"></div>', unsafe_allow_html=True)
+            st.markdown(f"""
+            <div style="
+                background: linear-gradient(135deg, rgba(255, 195, 0, 0.15), rgba(255, 226, 102, 0.1));
+                border-left: 3px solid #FFC300;
+                padding: 12px 15px;
+                border-radius: 8px;
+                margin-bottom: 20px;
+            ">
+                <div style="font-size: 13px; color: #ccc; margin-bottom: 5px;">
+                    <strong>{num_inspections}</strong> inspection{"s" if num_inspections != 1 else ""} •
+                    <strong>{total_photos}</strong> photo{"s" if total_photos != 1 else ""}
+                </div>
+                <div style="font-size: 11px; color: #999;">
+                    {date_range}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            # Empty state with helpful message
+            st.markdown("""
+            <div style="
+                background: rgba(255, 195, 0, 0.05);
+                border: 1px dashed rgba(255, 195, 0, 0.3);
+                border-radius: 8px;
+                padding: 15px;
+                text-align: center;
+                margin-bottom: 20px;
+            ">
+                <div style="font-size: 13px; color: #999; line-height: 1.6;">
+                    No inspections yet.<br>
+                    Upload a photo to get started! 📸
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
-                            st.success(f"✅ Loaded {len(import_data['inspections'])} inspections")
-                            st.rerun()
-                        else:
-                            st.error("Invalid backup format")
-                    except Exception as e:
-                        st.error(f"Failed to load backup: {e}")
+        st.markdown('<div style="margin: 20px 0;"></div>', unsafe_allow_html=True)
 
-        # Import data option
-        uploaded_json = st.file_uploader("Import JSON Data", type=["json"], key="import_json")
-        if uploaded_json is not None:
-            try:
-                import_data = json.load(uploaded_json)
+        # Upload section - collapsed by default if data exists
+        display_image_upload_options(in_sidebar=True, expanded=not has_data)
 
-                if 'inspections' in import_data:
-                    # Validate file paths and report missing files
-                    missing_files = []
-                    total_photos = 0
+        st.markdown('<div style="margin: 20px 0;"></div>', unsafe_allow_html=True)
 
-                    for inspection in import_data['inspections']:
-                        for photo in inspection.get('photos', []):
-                            total_photos += 1
-                            file_path = photo.get('file_path', '')
-                            if file_path and not os.path.exists(file_path):
-                                missing_files.append(file_path)
+        # Data Management section - collapsible
+        with st.expander("⚙️ Data Management", expanded=False):
+            st.markdown("**Export & Backup**")
 
-                    # Load inspections into session state
-                    st.session_state.inspections = import_data['inspections']
-                    st.session_state.data_manually_cleared = False  # Clear the flag - data is now loaded
+            # Export button
+            if st.button("💾 Export Data (JSON)", key="export_button", use_container_width=True):
+                if st.session_state.inspections:
+                    # Export current data to JSON file
+                    export_data = {
+                        "inspections": st.session_state.inspections,
+                        "exported_at": datetime.now().isoformat()
+                    }
 
-                    # Load first photo to display inspection overview (same as main app)
-                    if import_data['inspections'] and import_data['inspections'][0].get('photos'):
-                        first_photo = import_data['inspections'][0]['photos'][0]
-                        # Set session state to display this photo with ALL metadata
-                        from src.utils.session_manager import load_photo_into_session_state
+                    # Ensure exports directory exists
+                    os.makedirs("data/exports", exist_ok=True)
+
+                    # Create filename with timestamp
+                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    filename = f"data/exports/inspections_export_{timestamp}.json"
+
+                    # Save to file
+                    with open(filename, 'w') as f:
+                        json.dump(export_data, f, indent=2, default=str)
+
+                    st.success(f"✅ Data exported to {filename}")
+                else:
+                    st.warning("No data to export")
+
+            # Show backup info if exists
+            export_dir = "data/exports"
+            if os.path.exists(export_dir):
+                export_files = glob.glob(os.path.join(export_dir, "inspections_export_*.json"))
+                if export_files:
+                    # Find the most recent export
+                    latest_export = max(export_files, key=os.path.getctime)
+                    export_name = os.path.basename(latest_export)
+
+                    # Calculate time since backup
+                    backup_time = datetime.fromtimestamp(os.path.getctime(latest_export))
+                    time_diff = datetime.now() - backup_time
+                    if time_diff.days > 0:
+                        time_ago = f"{time_diff.days} day{'s' if time_diff.days != 1 else ''} ago"
+                    elif time_diff.seconds > 3600:
+                        hours = time_diff.seconds // 3600
+                        time_ago = f"{hours} hour{'s' if hours != 1 else ''} ago"
+                    else:
+                        minutes = time_diff.seconds // 60
+                        time_ago = f"{minutes} min ago"
+
+                    st.caption(f"Last backup: {time_ago}")
+
+                    if st.button("📁 Load Backup", key="load_backup_sidebar", use_container_width=True):
                         try:
-                            load_photo_into_session_state(first_photo)
-                            st.session_state.selected_inspection = 0
+                            with open(latest_export, 'r') as f:
+                                import_data = json.load(f)
+
+                            if 'inspections' in import_data:
+                                st.session_state.inspections = import_data['inspections']
+                                st.session_state.data_manually_cleared = False
+                                from src.utils.data_handler import save_inspections_to_disk
+                                save_inspections_to_disk()
+
+                                # Load first photo to display inspection overview
+                                if import_data['inspections'] and import_data['inspections'][0].get('photos'):
+                                    first_photo = import_data['inspections'][0]['photos'][0]
+                                    from src.utils.session_manager import load_photo_into_session_state
+                                    try:
+                                        load_photo_into_session_state(first_photo)
+                                        st.session_state.selected_inspection = 0
+                                    except Exception as e:
+                                        st.warning(f"Could not load first photo for display: {e}")
+
+                                st.success(f"✅ Loaded {len(import_data['inspections'])} inspections")
+                                st.rerun()
+                            else:
+                                st.error("Invalid backup format")
                         except Exception as e:
-                            st.warning(f"Could not load first photo for display: {e}")
+                            st.error(f"Failed to load backup: {e}")
 
-                    # Save to main data file
-                    from src.utils.data_handler import save_inspections_to_disk
-                    save_inspections_to_disk()
+            st.markdown('<div style="margin: 15px 0;"></div>', unsafe_allow_html=True)
+            st.markdown("**Import Data**")
 
-                    # Report import status
-                    if missing_files:
-                        st.warning(f"Imported {len(import_data['inspections'])} inspections with {total_photos} photos. ⚠️ {len(missing_files)} image files not found at expected paths.")
-                        with st.expander("Missing files"):
-                            for missing in missing_files:
-                                st.write(f"• {missing}")
-                        # Clear file uploader and trigger rerun for missing files case too
+            # Import data option
+            uploaded_json = st.file_uploader("Import JSON Data", type=["json"], key="import_json", label_visibility="collapsed")
+            if uploaded_json is not None:
+                try:
+                    import_data = json.load(uploaded_json)
+
+                    if 'inspections' in import_data:
+                        # Validate file paths and report missing files
+                        missing_files = []
+                        total_photos = 0
+
+                        for inspection in import_data['inspections']:
+                            for photo in inspection.get('photos', []):
+                                total_photos += 1
+                                file_path = photo.get('file_path', '')
+                                if file_path and not os.path.exists(file_path):
+                                    missing_files.append(file_path)
+
+                        # Load inspections into session state
+                        st.session_state.inspections = import_data['inspections']
+                        st.session_state.data_manually_cleared = False
+
+                        # Load first photo to display inspection overview
+                        if import_data['inspections'] and import_data['inspections'][0].get('photos'):
+                            first_photo = import_data['inspections'][0]['photos'][0]
+                            from src.utils.session_manager import load_photo_into_session_state
+                            try:
+                                load_photo_into_session_state(first_photo)
+                                st.session_state.selected_inspection = 0
+                            except Exception as e:
+                                st.warning(f"Could not load first photo: {e}")
+
+                        # Save to main data file
+                        from src.utils.data_handler import save_inspections_to_disk
+                        save_inspections_to_disk()
+
+                        # Report import status
+                        if missing_files:
+                            st.warning(f"⚠️ {len(missing_files)} image files not found")
+                            with st.expander("Missing files"):
+                                for missing in missing_files:
+                                    st.write(f"• {missing}")
+                        else:
+                            st.success(f"✅ Imported {len(import_data['inspections'])} inspections")
+
+                        # Clear file uploader and trigger rerun
                         st.session_state.pop('import_json', None)
                         st.rerun()
                     else:
-                        st.success(f"✅ Imported {len(import_data['inspections'])} inspections with {total_photos} photos. All image files found!")
+                        st.error("Invalid JSON format")
+                except Exception as e:
+                    st.error(f"Import failed: {e}")
 
-                    # Clear file uploader to prevent reprocessing and trigger rerun
-                    st.session_state.pop('import_json', None)
+            # Danger zone - Clear All Data
+            if has_data:
+                st.markdown('<div style="margin: 20px 0;"></div>', unsafe_allow_html=True)
+                st.markdown("**⚠️ Danger Zone**")
+
+                if st.button("🗑️ Clear All Data", key="clear_all_data", use_container_width=True, type="secondary"):
+                    # Clear all session state data
+                    st.session_state.inspections = []
+                    st.session_state.current_image = None
+                    st.session_state.data_manually_cleared = True
+                    st.session_state.url_image_cache = {}
+
+                    # Clear the runtime data file
+                    from src.utils.data_handler import save_inspections_to_disk
+                    save_inspections_to_disk()
+
+                    st.success("✅ All data cleared")
                     st.rerun()
-                else:
-                    st.error("Invalid JSON format")
-            except Exception as e:
-                st.error(f"Import failed: {e}")
-        
-        # Display cache and file information
-        st.subheader("Storage Status")
-        if 'url_image_cache' in st.session_state:
-            cache_count = len(st.session_state.url_image_cache)
-            st.write(f"URL Image Cache: {cache_count} images")
-
-            if cache_count > 0 and st.button("Clear Cache", key="clear_cache"):
-                st.session_state.url_image_cache = {}
-                st.success("Cache cleared!")
-                st.rerun()
-
-        # Show upload directory size
-        upload_dir = "data/uploads/users/default_user"
-        if os.path.exists(upload_dir):
-            files = [f for f in os.listdir(upload_dir) if f.endswith(('.jpg', '.jpeg', '.png'))]
-            total_size = sum(os.path.getsize(os.path.join(upload_dir, f)) for f in files) / (1024*1024)
-            st.write(f"Stored Images: {len(files)} files ({total_size:.1f} MB)")
 
 def display_inspection_gallery():
     """Display photo gallery for the current inspection integrated into the overview"""

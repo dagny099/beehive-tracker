@@ -170,14 +170,28 @@ def save_data_to_disk():
         return False
 
 def load_data_from_disk():
-    """Load inspection data from disk"""
+    """Load inspection data from disk, preferring latest backup if available"""
     try:
-        data_file = os.path.join("data", "inspections.json")
-        
+        import glob
+
+        # Check for latest backup first
+        export_dir = "data/exports"
+        data_file = None
+
+        if os.path.exists(export_dir):
+            export_files = glob.glob(os.path.join(export_dir, "inspections_export_*.json"))
+            if export_files:
+                # Find the most recent export
+                data_file = max(export_files, key=os.path.getctime)
+
+        # Fallback to runtime file if no backup found
+        if not data_file:
+            data_file = os.path.join("data", "inspections.json")
+
         if os.path.exists(data_file):
             with open(data_file, "r") as f:
                 data = json.load(f)
-                
+
             # Process loaded inspections
             if "inspections" in data:
                 for i, inspection in enumerate(data["inspections"]):
@@ -188,7 +202,7 @@ def load_data_from_disk():
                         except:
                             # Keep as string if parsing fails
                             pass
-                    
+
                     # Load any photo files
                     if "photos" in inspection:
                         for photo in inspection["photos"]:
@@ -196,10 +210,10 @@ def load_data_from_disk():
                                 # Don't load the actual image data here to save memory
                                 # It will be loaded when needed
                                 pass
-                
+
                 # Set in session state
                 st.session_state.inspections = data["inspections"]
-                
+
             return True
     except Exception as e:
         st.error(f"Error loading data: {e}")
