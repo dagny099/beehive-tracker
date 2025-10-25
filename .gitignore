@@ -23,6 +23,8 @@ venv.bak/
 .env
 .envrc
 
+.claude/commands
+
 # ================================
 # SECURITY - CREDENTIALS & SECRETS
 # ================================
