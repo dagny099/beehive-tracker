@@ -1,3 +1,5 @@
+[![CI](https://github.com/beehive-tracker/beehive-tracker/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/beehive-tracker/beehive-tracker/actions/workflows/ci.yml)
+
 # 🐝 Beehive Photo Metadata Tracker
 
 ## Executive Summary
@@ -190,6 +192,24 @@ For comprehensive implementation details:
 - **[⚙️ TECHNICAL_DECISIONS.md](TECHNICAL_DECISIONS.md)** - Architecture rationale and trade-offs
 - **[📊 DEVELOPMENT.md](DEVELOPMENT.md)** - Architecture decisions and testing strategy
 - **[🔧 DOCUMENTATION_AND_TESTING_PLAN.md](DOCUMENTATION_AND_TESTING_PLAN.md)** - Development roadmap
+
+---
+
+## Continuous Integration & Testing
+
+Automated CI runs on pushes and pull requests targeting the `main` branch. The pipeline installs dependencies with Poetry when available (falling back to `requirements.txt`), executes the consolidated `python run_tests.py` harness, runs the full `pytest` suite across Python 3.10 and 3.11, and validates the MkDocs build to keep the published documentation current.
+
+### Optional S3 Integration Tests
+
+Integration coverage for AWS S3 runs only when credentials are provided. Configure the following environment variables locally, or add them as repository secrets in GitHub Actions, to enable the storage integration tests:
+
+```
+AWS_ACCESS_KEY_ID=<your-access-key>
+AWS_SECRET_ACCESS_KEY=<your-secret-key>
+TEST_S3_BUCKET_NAME=<s3-bucket-for-test-artifacts>
+```
+
+When the variables are absent, the integration suite is automatically skipped, allowing contributors without AWS access to develop and run tests without interruption.
 
 ---
 

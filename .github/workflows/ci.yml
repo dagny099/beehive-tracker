@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  tests:
+    name: Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11"]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: poetry
+          cache-dependency-path: poetry.lock
+
+      - name: Install dependencies (Poetry)
+        if: ${{ hashFiles('poetry.lock') != '' }}
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install poetry
+          poetry install --no-interaction --no-root
+
+      - name: Install dependencies (pip)
+        if: ${{ hashFiles('poetry.lock') == '' && hashFiles('requirements.txt') != '' }}
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Configure AWS credentials for integration tests
+        if: ${{ secrets.AWS_ACCESS_KEY_ID != '' && secrets.AWS_SECRET_ACCESS_KEY != '' && secrets.TEST_S3_BUCKET_NAME != '' }}
+        run: echo "AWS integration tests enabled."
+
+      - name: Run custom test harness (Poetry)
+        if: ${{ hashFiles('poetry.lock') != '' }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          TEST_S3_BUCKET_NAME: ${{ secrets.TEST_S3_BUCKET_NAME }}
+        run: poetry run python run_tests.py
+
+      - name: Run custom test harness (pip)
+        if: ${{ hashFiles('poetry.lock') == '' }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          TEST_S3_BUCKET_NAME: ${{ secrets.TEST_S3_BUCKET_NAME }}
+        run: python run_tests.py
+
+      - name: Run pytest (Poetry)
+        if: ${{ hashFiles('poetry.lock') != '' }}
+        run: poetry run pytest
+
+      - name: Run pytest (pip)
+        if: ${{ hashFiles('poetry.lock') == '' }}
+        run: pytest
+
+  docs:
+    name: Docs build
+    needs: tests
+    if: ${{ hashFiles('mkdocs.yml') != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements-docs.txt
+
+      - name: Install documentation dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements-docs.txt ]; then
+            python -m pip install -r requirements-docs.txt
+          else
+            python -m pip install mkdocs
+          fi
+
+      - name: Build documentation
+        run: mkdocs build --config-file mkdocs.yml
