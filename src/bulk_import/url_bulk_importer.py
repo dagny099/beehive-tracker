@@ -304,6 +304,11 @@ class URLBulkImporter(BulkImportTemplate):
             self.logger.debug(f"Successfully extracted metadata for: {filename}")
             return metadata
 
+        except (ValueError, RuntimeError):
+            # Deliberate failures raised above (unsupported content type,
+            # oversized response) pass through unchanged. See the note in
+            # local_bulk_importer.
+            raise
         except requests.exceptions.RequestException as e:
             raise RuntimeError(f"Network error accessing {source_identifier}: {e}")
         except Exception as e:
@@ -374,38 +379,8 @@ class URLBulkImporter(BulkImportTemplate):
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         return f"{domain}_{timestamp}.jpg"
 
-    def _perform_vision_analysis(self, image_data: bytes) -> Dict[str, Any]:
-        """
-        Perform computer vision analysis using existing infrastructure.
-
-        IDENTICAL implementation to other templates for consistency.
-
-        Args:
-            image_data: Raw image bytes
-
-        Returns:
-            Dict containing vision analysis results
-        """
-        try:
-            # Import and use existing vision API integration
-            from api_services.vision import analyze_image_with_vision_api
-
-            # Use existing vision API (same as other templates)
-            vision_results = analyze_image_with_vision_api(image_data)
-
-            if vision_results and 'labels' in vision_results:
-                self.logger.debug(f"Vision analysis found {len(vision_results['labels'])} labels")
-                return vision_results
-            else:
-                self.logger.debug("No vision analysis results available")
-                return {}
-
-        except ImportError:
-            self.logger.debug("Vision API not available - skipping analysis")
-            return {}
-        except Exception as e:
-            self.logger.warning(f"Vision analysis failed: {e}")
-            return {}
+    # _perform_vision_analysis now lives on BulkImportTemplate so all three
+    # importers share one implementation (and one set of vision counters).
 
     def group_into_inspections(self, photos: List[PhotoMetadata]) -> List[InspectionGroup]:
         """

@@ -7,9 +7,80 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+#### Bulk import Vision stage (2026-08-23)
+- **Vision analysis now runs during bulk import.** All three bulk importers
+  called `analyze_image_with_vision_api`, a function that did not exist. The
+  call sat inside `except ImportError`, returned `{}`, and logged at DEBUG, so
+  every bulk-imported photo silently received zero vision data from the
+  feature's introduction (`2206b78`, 2025-10-02) until this fix. This
+  supersedes the 0.1.0 entry claiming "Stage 3: Vision API analysis"; that
+  stage was scaffolded but never functional. `vision.py` had been touched by
+  exactly one commit in the repo's history (`139a103`, 2025-03-24).
+- **`vision_analysis` is carried into the app.** The bulk path built its photo
+  dict without the key, so results would have been discarded at handoff even
+  once the call worked. `data_handler` and `ui_components` both read it.
+- **Specific exceptions are no longer flattened.** `extract_photo_metadata` in
+  all three importers ended with `except Exception: raise ValueError(...)`,
+  which caught the deliberate `RuntimeError("File does not exist")` raised
+  above it. Callers could not distinguish a missing file from an invalid
+  image, contrary to the docstring contract.
+- **GPS was never extracted during bulk import.** `_extract_gps_coordinates`
+  imported `get_image_gps_coordinates`, a function that has never existed on
+  any branch, inside `except Exception: pass`. Every bulk-imported photo came
+  back with `gps_coordinates=None`. The damage cascaded: no GPS meant
+  `get_inspection_location` fell back to the configured default, so weather
+  was fetched for the default coordinates rather than where the photo was
+  taken. Now uses the real helper, `convert_gps_to_decimal`, with `GPSTAGS` to
+  decode PIL's integer-keyed GPSInfo, and range-checks the result.
+- **Colour palettes were fake.** `_extract_color_palette` passed raw bytes to
+  `extract_color_palette`, which expects a PIL Image and calls `img.save()`.
+  It threw on every photo, and the handler returned a hard-coded
+  `["#CCCCCC", "#DDDDDD", "#EEEEEE"]` that looks like real data in the
+  gallery. Now decodes the image first, and returns `[]` on genuine failure
+  so missing data reads as missing.
+- **Repeated failed weather lookups.** A failed fetch left `weather_data`
+  falsy, so every subsequent photo in the same inspection retried it, blocking
+  HTTP call and timeout included. Guarded with `weather_fetch_attempted`.
+- **Quadratic saves during bulk import.** `add_photo_to_inspection` wrote the
+  entire inspection set to disk once per photo. It accepts `defer_save` now;
+  bulk import saves once at the end. Single-photo callers are unchanged.
+- **Photo resolution.** The bulk path hard-coded `'Unknown'` with a "Phase 4"
+  comment. `_extract_exif_data` now records `ImageWidth`/`ImageHeight` from the
+  decoded image when EXIF omits them, which is common on phone photos.
+- **Vision unit tests could not run.** `setup_method` constructed a real
+  `BeeVisionAnalyzer` before each test's `@patch` took effect: 12 tests errored
+  with `DefaultCredentialsError` without credentials, and with credentials the
+  mocks never replaced the live client, so "mocked" tests could reach the real
+  API. Also fixed a patch target typo
+  (`...vision.vision.vision.Image`) and a concurrency test that built its
+  analyzer outside the patch. Suite went from 2 passed/1 failed/12 errors to
+  15 passed.
+
 ### Changed
+- **Per-stage reporting in bulk import.** `stage3_complete` was hard-coded to
+  `0` and `stage4_complete` to `0` with the comment "No weather integration
+  yet". Both now report real counts, and the Step 4 summary states how many
+  photos were analyzed and how many inspections were weather-enriched,
+  including the reason when a stage produced nothing. A stage that silently
+  does nothing is what let the Vision gap survive ~10 months.
+- **Shared `_perform_vision_analysis`.** Removed three near-identical copies
+  from the importers in favour of one implementation on `BulkImportTemplate`,
+  which also owns the new `vision_stats` counters.
+- Vision client is built lazily and reused rather than per photo, and the
+  `print(f"Analyzing image: {image_data}")` that dumped whole JPEGs to stdout
+  is now a `logger.debug` with type and size.
 - Reorganized documentation structure for better maintainability
 - Updated `.gitignore` to exclude additional temporary files
+
+### Known issues
+- Weather enrichment works in bulk import (via `add_photo_to_inspection`), but
+  is inspection-level only and depends on photos carrying GPS.
+- 3 tests in `tests/bulk_import/test_url_template.py` and
+  `test_template_consistency.py` fail on mock fixtures that return a
+  `MagicMock` where a content-type string is expected. Test-fixture bugs, not
+  product bugs. They failed identically before these changes.
 
 ## [0.1.0] - 2025-10-25
 

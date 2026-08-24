@@ -24,8 +24,15 @@ class BeeVisionAnalyzer:
             dict: Analysis results
         """
         try:
-            print(f"Analyzing image: {image_data}")
-            
+            # Was: print(f"Analyzing image: {image_data}"). With bytes input that
+            # dumps an entire JPEG to stdout for every photo, which makes a bulk
+            # run unreadable. Log the type and size instead.
+            logger.debug(
+                "Analyzing image (%s, %s bytes)",
+                type(image_data).__name__,
+                len(image_data) if isinstance(image_data, (bytes, bytearray)) else "n/a",
+            )
+
             # Handle different input types
             if isinstance(image_data, str):
                 print(f"Opening file: {image_data}")
@@ -188,4 +195,73 @@ class BeeVisionAnalyzer:
             return "Low Activity"
         else:
             return "Unknown"
+
+
+# ---------------------------------------------------------------------------
+# Module-level entry point used by the bulk importers.
+#
+# Why this exists: s3/local/url bulk importers have called
+# `analyze_image_with_vision_api` since the bulk import feature landed
+# (2206b78, 2025-10-02), but the function was never written. The call sat
+# inside `except ImportError` and returned {}, so every bulk-imported photo
+# silently received zero vision data for ~10 months. Found 2026-08-23.
+#
+# The client is built lazily and reused. Constructing an ImageAnnotatorClient
+# per photo would re-do auth on every image in a batch.
+# ---------------------------------------------------------------------------
+
+_analyzer: Optional["BeeVisionAnalyzer"] = None
+_analyzer_error: Optional[str] = None
+
+
+def get_vision_analyzer() -> Optional["BeeVisionAnalyzer"]:
+    """
+    Return a shared BeeVisionAnalyzer, or None if one cannot be constructed.
+
+    Client construction is what fails when GOOGLE_APPLICATION_CREDENTIALS is
+    unset or the service account is invalid, so that failure is cached and
+    logged once per process instead of once per photo.
+    """
+    global _analyzer, _analyzer_error
+
+    if _analyzer is not None:
+        return _analyzer
+    if _analyzer_error is not None:
+        return None
+
+    try:
+        _analyzer = BeeVisionAnalyzer()
+        return _analyzer
+    except Exception as e:
+        _analyzer_error = str(e)
+        logger.warning(
+            "Vision API unavailable, analysis will be skipped for all images: %s. "
+            "Check that GOOGLE_APPLICATION_CREDENTIALS points at a valid "
+            "service-account key and that the Vision API is enabled.",
+            e,
+        )
+        return None
+
+
+def analyze_image_with_vision_api(image_data) -> Dict[str, Any]:
+    """
+    Analyze one image and return structured Vision results.
+
+    Parameters:
+        image_data: raw bytes, a file path, or io.BytesIO
+
+    Returns:
+        dict: on success, the structure produced by
+              BeeVisionAnalyzer._process_vision_response, which includes a
+              'labels' key. On failure, a dict carrying 'error' and no
+              'labels' key, so callers can tell the two apart.
+    """
+    analyzer = get_vision_analyzer()
+    if analyzer is None:
+        return {
+            'error': _analyzer_error or 'Vision analyzer unavailable',
+            'timestamp': datetime.now().isoformat(),
+        }
+
+    return analyzer.analyze_image(image_data)
         

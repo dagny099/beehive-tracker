@@ -168,6 +168,15 @@ Supports importing multiple photos from various sources:
 4. Progress Tracking → 4-stage progress bar with error logging
 5. Integration → Creates inspections and updates timeline
 
+Step 3 became true on 2026-08-23. Before that the Vision call targeted a
+function that did not exist and returned `{}` silently; see "Bulk import: the
+2026-08-23 repair" below before trusting any description of this pipeline.
+
+Weather in bulk import is not called by the importers. It arrives indirectly:
+`add_photo_to_inspection` (`src/utils/data_handler.py`) calls
+`fetch_weather_for_inspection`, which needs `inspection['location']` as a dict
+with lat/lon, so it only fires for photos carrying GPS.
+
 ## Environment Variables
 
 ### Required for Core Functionality
@@ -390,6 +399,62 @@ This handles diverse camera formats and EXIF variations robustly.
 - Page not refreshing: Check for `st.rerun()` usage
 - Navigation issues: Verify page files are in correct locations
 - Session state conflicts: Use unique key prefixes per page
+
+## Bulk import: the 2026-08-23 repair (read before changing this area)
+
+**Verify claims about this codebase against source, not against README,
+CHANGELOG, or docstrings.** Every problem below was documented as working.
+
+What was actually wrong, and where:
+
+- All three bulk importers called `analyze_image_with_vision_api`, which had
+  never been written. The call sat inside `except ImportError`, returned `{}`,
+  and logged at DEBUG. Every bulk-imported photo got zero vision data from
+  `2206b78` (2025-10-02) until the fix. `vision.py` had been touched by exactly
+  one commit in the repo's entire history (`139a103`, 2025-03-24), which is the
+  cheapest way to confirm the feature was scaffolded and never wired.
+- `stage3_complete` was hard-coded `0`; `stage4_complete` was hard-coded `0`
+  with the comment "No weather integration yet". Weather in fact worked. A
+  counter that reports nothing makes a working stage and a dead stage look
+  identical, which is how this survived ~10 months.
+- The photo dict handed to `add_photo_to_inspection` omitted `vision_analysis`,
+  so results would have been dropped even after the call worked.
+- **Two more of the same skeleton, found by auditing for it.**
+  `_extract_gps_coordinates` imported `get_image_gps_coordinates` (never
+  defined anywhere, any branch) inside `except Exception: pass`, so bulk GPS
+  was always `None` — which silently redirected weather lookups to the default
+  location. `_extract_color_palette` passed bytes to a function expecting a PIL
+  Image, threw every time, and returned a hard-coded grey triple that looks
+  like real data. The audit that found them: parse every `from X import Y` in
+  `src/` and check `Y` is actually defined in `X`. Worth re-running after any
+  large refactor.
+
+Design rules that came out of it:
+
+- **A stage that produces nothing must say so on screen.** `vision_stats`
+  (`attempted`/`succeeded`/`skipped`/`last_error`) lives on
+  `BulkImportTemplate`; the Step 4 summary renders it. Add the same accounting
+  to any new stage rather than a hard-coded counter.
+- **`_perform_vision_analysis` lives once, on `BulkImportTemplate`.** It used
+  to be copy-pasted into all three importers, so one broken copy meant three.
+- **Do not widen `except Exception` around deliberate raises.**
+  `extract_photo_metadata` was flattening its own `RuntimeError("File does not
+  exist")` into `ValueError`. Specific exceptions re-raise first now.
+- **Vision client is a lazy module-level singleton** (`get_vision_analyzer`).
+  Constructing `ImageAnnotatorClient` per photo re-authenticates per image, and
+  a credentials failure would otherwise log once per photo.
+- **`add_photo_to_inspection(photo_data, defer_save=False)`.** Bulk callers
+  pass `defer_save=True` and save once; saving per photo is quadratic.
+
+Testing note: `tests/unit/test_vision_api.py` must construct the analyzer
+*inside* the patch. `setup_method` builds nothing; `self.analyzer` is a lazy
+property and an autouse fixture stubs `ImageAnnotatorClient`. Reverting to
+`self.analyzer = BeeVisionAnalyzer()` in setup reintroduces 12
+`DefaultCredentialsError` errors and lets "mocked" tests hit the real API.
+
+Still open in this area: weather is inspection-level and GPS-dependent; 3
+tests in `tests/bulk_import/` fail on mock fixtures returning `MagicMock`
+where a content-type string belongs (pre-existing, test-side).
 
 ## Documentation
 

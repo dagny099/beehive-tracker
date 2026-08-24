@@ -162,6 +162,11 @@ export GOOGLE_APPLICATION_CREDENTIALS="path/to/credentials.json"
 streamlit run run_tracker.py
 ```
 
+`GOOGLE_APPLICATION_CREDENTIALS` must point at a **service-account key**, not an
+OAuth client file. Without it the app still imports photos, EXIF, GPS, colors
+and weather; computer vision is skipped, and bulk import reports which stages
+ran and why one produced nothing rather than failing quietly.
+
 **For detailed deployment:** See [DEPLOYMENT.md](DEPLOYMENT.md) for comprehensive setup, Docker configuration, and cloud deployment guide.
 
 ---

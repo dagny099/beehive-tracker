@@ -303,6 +303,11 @@ class S3BulkImporter(BulkImportTemplate):
             self.logger.debug(f"Successfully extracted metadata for: {filename}")
             return metadata
 
+        except (ValueError, RuntimeError):
+            # Deliberate failures raised above (file too large, unsupported
+            # type) pass through unchanged. See the note in
+            # local_bulk_importer: the generic handler was flattening them.
+            raise
         except ClientError as e:
             error_code = e.response['Error']['Code']
             if error_code == 'NoSuchKey':
@@ -314,40 +319,8 @@ class S3BulkImporter(BulkImportTemplate):
         except Exception as e:
             raise ValueError(f"Failed to process image {source_identifier}: {str(e)}")
 
-    def _perform_vision_analysis(self, image_data: bytes) -> Dict[str, Any]:
-        """
-        Perform computer vision analysis using existing infrastructure.
-
-        Demonstrates integration with existing API services while maintaining
-        consistent error handling patterns.
-
-        Args:
-            image_data: Raw image bytes
-
-        Returns:
-            Dict containing vision analysis results
-        """
-        try:
-            # Import and use existing vision API integration
-            from api_services.vision import analyze_image_with_vision_api
-
-            # Convert image data to format expected by vision API
-            # This maintains consistency with existing codebase patterns
-            vision_results = analyze_image_with_vision_api(image_data)
-
-            if vision_results and 'labels' in vision_results:
-                self.logger.debug(f"Vision analysis found {len(vision_results['labels'])} labels")
-                return vision_results
-            else:
-                self.logger.debug("No vision analysis results available")
-                return {}
-
-        except ImportError:
-            self.logger.debug("Vision API not available - skipping analysis")
-            return {}
-        except Exception as e:
-            self.logger.warning(f"Vision analysis failed: {e}")
-            return {}
+    # _perform_vision_analysis now lives on BulkImportTemplate so all three
+    # importers share one implementation (and one set of vision counters).
 
     def group_into_inspections(self, photos: List[PhotoMetadata]) -> List[InspectionGroup]:
         """

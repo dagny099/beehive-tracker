@@ -25,6 +25,30 @@ from bulk_import.s3_bulk_importer import create_s3_bulk_importer
 from bulk_import.local_bulk_importer import create_local_bulk_importer
 from bulk_import.url_bulk_importer import create_url_bulk_importer
 
+
+def _format_resolution(exif_data: Dict[str, Any]) -> str:
+    """
+    Build a "WIDTHxHEIGHT" string from extracted EXIF.
+
+    BulkImportTemplate._extract_exif_data fills ImageWidth/ImageHeight from the
+    decoded image when the tags are missing, so this is usually available. The
+    bulk path previously hard-coded 'Unknown' with a "Phase 4" comment.
+    """
+    if not exif_data:
+        return 'Unknown'
+
+    width = exif_data.get('ImageWidth') or exif_data.get('ExifImageWidth')
+    height = exif_data.get('ImageHeight') or exif_data.get('ExifImageHeight')
+
+    try:
+        if width and height:
+            return f"{int(width)}x{int(height)}"
+    except (TypeError, ValueError):
+        pass
+
+    return 'Unknown'
+
+
 def initialize_bulk_import_state():
     """Initialize session state for bulk import workflow"""
     if 'bulk_import_state' not in st.session_state:
@@ -713,7 +737,10 @@ def render_processing():
                 grouped_inspections = importer.group_into_inspections(processed_photos)
 
                 # Convert to main app format and integrate
-                from src.utils.data_handler import add_photo_to_inspection
+                from src.utils.data_handler import (
+                    add_photo_to_inspection,
+                    save_inspections_to_disk,
+                )
                 inspections_created = 0
 
                 for group in grouped_inspections:
@@ -736,15 +763,24 @@ def render_processing():
                             'file_path': file_path,
                             'date_taken': photo_metadata.timestamp.strftime("%Y:%m:%d %H:%M:%S") if photo_metadata.timestamp else 'Unknown',
                             'camera_model': photo_metadata.camera_make or photo_metadata.camera_model or 'Unknown',
-                            'resolution': 'Unknown',  # Will be extracted properly in Phase 4
+                            'resolution': _format_resolution(photo_metadata.exif_data),
                             'color_palette': photo_metadata.colors or [],
                             'lat': photo_metadata.gps_coordinates[0] if photo_metadata.gps_coordinates else None,
                             'lon': photo_metadata.gps_coordinates[1] if photo_metadata.gps_coordinates else None,
+                            # The importers have always collected this; the bulk
+                            # path used to drop it here, so nothing downstream
+                            # ever saw it. data_handler and ui_components both
+                            # read photo['vision_analysis'].
+                            'vision_analysis': photo_metadata.vision_analysis or {},
                         }
 
-                        # Add to main app inspections
-                        add_photo_to_inspection(photo_data)
+                        # Add to main app inspections. defer_save keeps the
+                        # write out of the loop; we save once below.
+                        add_photo_to_inspection(photo_data, defer_save=True)
                         inspections_created += 1
+
+                # One write for the whole import instead of one per photo.
+                save_inspections_to_disk()
 
                 # Update processing state
                 import_state['processing_started'] = True
@@ -753,15 +789,57 @@ def render_processing():
                 import_state['step'] = 4
                 import_state['inspections_created'] = len(grouped_inspections)
 
-                # Initialize and update progress tracking
+                # Initialize and update progress tracking.
+                # stage3 used to be hard-coded to 0 with the comment "No vision
+                # analysis yet", which stayed true and unnoticed for ~10 months.
+                # It now reports what the Vision stage actually did.
                 total_photos = len(import_state['discovered_photos'])
+                vision_stats = getattr(importer, 'vision_stats', {}) or {}
+                import_state['vision_stats'] = dict(vision_stats)
+
+                # Weather. Contrary to the old "No weather integration yet"
+                # comment, add_photo_to_inspection already calls
+                # fetch_weather_for_inspection, so the bulk path does get
+                # weather via Open-Meteo whenever an inspection has GPS and a
+                # date. What was missing was any accounting of it. Count the
+                # inspections that actually came back with data.
+                all_inspections = st.session_state.get('inspections', []) or []
+                weather_ok = sum(
+                    1 for insp in all_inspections
+                    if isinstance(insp.get('weather_data'), dict)
+                    and insp['weather_data'].get('weather_temperature_C') is not None
+                )
+                weather_attempted = sum(
+                    1 for insp in all_inspections if insp.get('weather_fetch_attempted')
+                )
+                import_state['weather_stats'] = {
+                    'succeeded': weather_ok,
+                    'attempted': weather_attempted,
+                }
+
                 import_state['processing_progress'] = {
                     'total_photos': total_photos,
                     'stage1_complete': total_photos,
                     'stage2_complete': len(processed_photos),
-                    'stage3_complete': 0,  # No vision analysis yet
-                    'stage4_complete': 0   # No weather integration yet
+                    'stage3_complete': vision_stats.get('succeeded', 0),
+                    'stage4_complete': weather_ok
                 }
+
+                # Say out loud when a stage produced nothing.
+                if vision_stats.get('succeeded', 0) == 0 and vision_stats.get('attempted', 0) > 0:
+                    st.warning(
+                        f"🔍 Vision analysis produced no results for any of "
+                        f"{vision_stats['attempted']} photos. "
+                        f"Reason: {vision_stats.get('last_error') or 'unknown'}. "
+                        "Photos, dates, GPS and colors were still imported."
+                    )
+                elif vision_stats.get('skipped', 0):
+                    st.info(
+                        f"🔍 Vision analysis: {vision_stats.get('succeeded', 0)} of "
+                        f"{vision_stats.get('attempted', 0)} photos analyzed, "
+                        f"{vision_stats['skipped']} skipped. "
+                        f"Last reason: {vision_stats.get('last_error') or 'unknown'}."
+                    )
 
                 # Load first photo from latest inspection for display on Dashboard
                 # This ensures Inspection Overview appears after bulk import
@@ -820,6 +898,42 @@ def render_completion():
     # Celebratory success message
     st.balloons()
     st.success(f"{source_icons[source_type]} Successfully imported **{total_photos} photos** from {source_type.upper()} source!")
+
+    # Per-stage honesty. A run that imported photos but analyzed none of them
+    # is a partial success, and the summary should say so on the same screen
+    # as the balloons rather than in a DEBUG log.
+    vision_stats = import_state.get('vision_stats') or {}
+    attempted = vision_stats.get('attempted', 0)
+    succeeded = vision_stats.get('succeeded', 0)
+    if attempted:
+        if succeeded == 0:
+            st.warning(
+                f"🔍 **Vision analysis: 0 of {attempted} photos.** "
+                f"Reason: {vision_stats.get('last_error') or 'unknown'}. "
+                "Everything else on this page still imported correctly."
+            )
+        elif succeeded < attempted:
+            st.info(
+                f"🔍 Vision analysis: {succeeded} of {attempted} photos analyzed. "
+                f"Last skip reason: {vision_stats.get('last_error') or 'unknown'}."
+            )
+        else:
+            st.success(f"🔍 Vision analysis: {succeeded} of {attempted} photos analyzed.")
+
+    weather_stats = import_state.get('weather_stats') or {}
+    w_attempted = weather_stats.get('attempted', 0)
+    w_ok = weather_stats.get('succeeded', 0)
+    if w_attempted:
+        if w_ok == 0:
+            st.warning(
+                f"🌤️ **Weather: 0 of {w_attempted} inspections.** Open-Meteo returned "
+                "nothing usable, which usually means the photos carry no GPS "
+                "coordinates or the dates fall outside the archive."
+            )
+        elif w_ok < w_attempted:
+            st.info(f"🌤️ Weather: {w_ok} of {w_attempted} inspections enriched.")
+        else:
+            st.success(f"🌤️ Weather: {w_ok} of {w_attempted} inspections enriched.")
 
     # Enhanced summary statistics with better visuals
     st.markdown("### 📊 Import Summary")

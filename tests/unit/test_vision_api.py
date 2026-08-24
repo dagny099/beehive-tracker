@@ -36,7 +36,38 @@ class TestBeeVisionAnalyzer:
 
     def setup_method(self):
         """Set up test fixtures for each test method."""
-        self.analyzer = BeeVisionAnalyzer()
+        # Deliberately does NOT construct the analyzer here.
+        #
+        # BeeVisionAnalyzer.__init__ builds a real ImageAnnotatorClient, and
+        # setup_method runs BEFORE each test's @patch decorator takes effect.
+        # Building it here therefore did two unwanted things: it required real
+        # ADC credentials just to collect the suite (12 tests errored with
+        # DefaultCredentialsError on a machine without them), and where
+        # credentials did exist the analyzer held a live client that the test's
+        # mock never replaced, so the "mocked" tests could reach the network.
+        # That contradicts the project rule "Never make real API calls in
+        # tests". Constructing lazily means self.analyzer is built inside the
+        # patched context and picks up the mock.
+        self._analyzer = None
+
+    @pytest.fixture(autouse=True)
+    def _stub_vision_client(self):
+        """
+        Safety net: no test in this class can construct a real client.
+
+        Tests that carry their own @patch decorator override this one for the
+        duration of the test body; tests without a decorator still get a stub
+        instead of a DefaultCredentialsError.
+        """
+        with patch('src.api_services.vision.vision.ImageAnnotatorClient'):
+            yield
+
+    @property
+    def analyzer(self):
+        """Build the analyzer on first use, inside the active @patch."""
+        if self._analyzer is None:
+            self._analyzer = BeeVisionAnalyzer()
+        return self._analyzer
 
     @patch('src.api_services.vision.vision.ImageAnnotatorClient')
     def test_successful_bee_image_analysis(self, mock_client):
@@ -335,7 +366,9 @@ class TestBeeVisionAnalyzer:
         result = self.analyzer.analyze_image(b"unclear_image")
         assert result['bee_summary']['suggested_hive_state'] in ['Unknown', 'Low Activity']
 
-    @patch('src.api_services.vision.vision.vision.Image')
+    # Was 'src.api_services.vision.vision.vision.Image' — one 'vision.' too
+    # many, so the patch raised ModuleNotFoundError before the test ran.
+    @patch('src.api_services.vision.vision.Image')
     @patch('src.api_services.vision.vision.ImageAnnotatorClient')
     def test_vision_api_request_structure(self, mock_client, mock_image):
         """
@@ -444,20 +477,23 @@ class TestVisionAPIIntegrationPatterns:
         import threading
         import time
         
-        analyzer = BeeVisionAnalyzer()
+        # The analyzer must be built while the client class is patched. It was
+        # constructed before any patch, so this test needed real credentials,
+        # and the per-thread patch below could never affect the client the
+        # analyzer already held.
+        with patch('src.api_services.vision.vision.ImageAnnotatorClient') as mock_client:
+            mock_instance = Mock()
+            mock_client.return_value = mock_instance
+            mock_instance.annotate_image.return_value = SUCCESSFUL_BEE_RESPONSE
+            analyzer = BeeVisionAnalyzer()
+
         results = []
         errors = []
-        
+
         def analyze_image(image_data):
             try:
-                # Mock the client to avoid real API calls
-                with patch('src.api_services.vision.vision.ImageAnnotatorClient') as mock_client:
-                    mock_instance = Mock()
-                    mock_client.return_value = mock_instance
-                    mock_instance.annotate_image.return_value = SUCCESSFUL_BEE_RESPONSE
-                    
-                    result = analyzer.analyze_image(image_data)
-                    results.append(result)
+                result = analyzer.analyze_image(image_data)
+                results.append(result)
             except Exception as e:
                 errors.append(e)
         

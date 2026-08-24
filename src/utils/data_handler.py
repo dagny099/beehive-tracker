@@ -298,8 +298,17 @@ def load_inspections_from_disk():
         print(f"Error loading data: {e}", file=sys.stderr)
         return False
 
-def add_photo_to_inspection(photo_data):
-    """Add a photo to an existing inspection or create a new one"""
+def add_photo_to_inspection(photo_data, defer_save=False):
+    """Add a photo to an existing inspection or create a new one
+
+    Args:
+        photo_data (dict): The photo record to file into an inspection.
+        defer_save (bool): Skip the write to disk. Bulk import passes True and
+            calls save_inspections_to_disk() once at the end. Saving inside the
+            loop re-serializes every inspection for every photo, which is
+            quadratic and makes a large import look hung. Single-photo callers
+            leave this False so their behaviour is unchanged.
+    """
     # Extract date from photo data
     if "date_taken" in photo_data and photo_data["date_taken"] != "Unknown":
         try:
@@ -368,9 +377,14 @@ def add_photo_to_inspection(photo_data):
                 # If no GPS and no existing location, use default
                 inspection['location'] = get_inspection_location(photo_data)
 
-            # Automatically fetch weather data if not present
-            if not inspection.get('weather_data'):
+            # Automatically fetch weather data if not present.
+            # The attempted flag stops a failed lookup from being retried once
+            # per photo. During a bulk import of one day's photos that meant a
+            # fresh blocking HTTP call, and its timeout, for every photo in the
+            # inspection.
+            if not inspection.get('weather_data') and not inspection.get('weather_fetch_attempted'):
                 weather_data = fetch_weather_for_inspection(inspection)
+                inspection['weather_fetch_attempted'] = True
                 if weather_data:
                     inspection['weather_data'] = weather_data
 
@@ -400,6 +414,7 @@ def add_photo_to_inspection(photo_data):
 
         # Automatically fetch weather data for new inspection
         weather_data = fetch_weather_for_inspection(new_inspection)
+        new_inspection['weather_fetch_attempted'] = True
         if weather_data:
             new_inspection['weather_data'] = weather_data
 
@@ -412,9 +427,10 @@ def add_photo_to_inspection(photo_data):
         inspection_title = get_inspection_title(inspection_index)
         st.session_state.associated_inspection = inspection_title
     
-    # Save changes to disk
-    save_inspections_to_disk()
-    
+    # Save changes to disk (unless the caller is batching, see defer_save)
+    if not defer_save:
+        save_inspections_to_disk()
+
     return True
 
 def get_inspection_by_id(inspection_id):

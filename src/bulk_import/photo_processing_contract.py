@@ -17,6 +17,9 @@ from typing import Dict, Any, List, Optional, Tuple, Union
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class GroupingStrategy(Enum):
@@ -128,6 +131,68 @@ class BulkImportTemplate(ABC):
         """
         self.config = config
         self.grouping_strategy = GroupingStrategy(config.get('grouping_strategy', 'date'))
+
+        # Vision stage accounting. The UI reads this after a run so that a
+        # stage which produced nothing says so out loud. See
+        # _perform_vision_analysis for why this exists.
+        self.vision_stats: Dict[str, Any] = {
+            'attempted': 0,
+            'succeeded': 0,
+            'skipped': 0,
+            'last_error': None,
+        }
+
+    def _perform_vision_analysis(self, image_data: bytes) -> Dict[str, Any]:
+        """
+        Perform computer vision analysis, recording whether it actually ran.
+
+        Shared by all templates. It used to be copy-pasted into each importer,
+        where it swallowed failures at DEBUG level. That is how a Vision stage
+        that had never worked stayed invisible for ~10 months: the function it
+        imported did not exist, ImportError was caught, {} was returned, and
+        the run still reported success. Failures are now logged at WARNING and
+        counted, so "0 of 12 analyzed" is visible without reading DEBUG logs.
+
+        Args:
+            image_data: Raw image bytes
+
+        Returns:
+            Dict of vision results, or {} when analysis did not produce labels.
+        """
+        log = getattr(self, 'logger', logger)
+        self.vision_stats['attempted'] += 1
+
+        try:
+            from api_services.vision import analyze_image_with_vision_api
+
+            vision_results = analyze_image_with_vision_api(image_data)
+
+            if vision_results and 'labels' in vision_results:
+                self.vision_stats['succeeded'] += 1
+                log.debug("Vision analysis found %d labels", len(vision_results['labels']))
+                return vision_results
+
+            reason = 'no labels returned'
+            if isinstance(vision_results, dict) and vision_results.get('error'):
+                reason = vision_results['error']
+
+            self.vision_stats['skipped'] += 1
+            self.vision_stats['last_error'] = reason
+            log.warning("Vision analysis produced no results: %s", reason)
+            return {}
+
+        except ImportError as e:
+            self.vision_stats['skipped'] += 1
+            self.vision_stats['last_error'] = f"Vision API not importable: {e}"
+            log.warning(
+                "Vision API not importable, skipping analysis for this photo: %s", e
+            )
+            return {}
+        except Exception as e:
+            self.vision_stats['skipped'] += 1
+            self.vision_stats['last_error'] = str(e)
+            log.warning("Vision analysis failed: %s", e)
+            return {}
 
     @abstractmethod
     def extract_photo_metadata(self, source_identifier: Union[str, bytes]) -> PhotoMetadata:
@@ -260,6 +325,18 @@ class BulkImportTemplate(ABC):
                     tag = TAGS.get(tag_id, tag_id)
                     exif_data[tag] = value
 
+            # Pixel dimensions, taken from the decoded image rather than EXIF.
+            # Many phone photos omit the width/height tags, and a stripped or
+            # rotated file can carry stale ones. PIL already has the real size
+            # here, so record it when EXIF did not supply it. This is what lets
+            # bulk import report a real resolution instead of "Unknown".
+            try:
+                width, height = image.size
+                exif_data.setdefault('ImageWidth', width)
+                exif_data.setdefault('ImageHeight', height)
+            except Exception:
+                pass
+
             return exif_data
 
         except Exception as e:
@@ -270,38 +347,80 @@ class BulkImportTemplate(ABC):
         """
         Common GPS extraction logic used by all templates.
 
-        Ensures identical GPS coordinate processing across all import sources.
+        Fixed 2026-08-23. This imported `get_image_gps_coordinates`, which has
+        never existed on any branch, inside `except Exception: pass` — so every
+        bulk-imported photo came back with gps_coordinates=None. That cascaded:
+        no GPS meant get_inspection_location fell back to the configured
+        default, and weather was then fetched for the default coordinates
+        rather than where the photo was taken. Plausible wrong data is worse
+        than none.
+
+        The real helper is convert_gps_to_decimal(coords, ref). PIL leaves the
+        nested GPSInfo dict keyed by integers, so GPSTAGS maps it back.
         """
+        log = getattr(self, 'logger', logger)
+        gps_info = (exif_data or {}).get('GPSInfo')
+        if not gps_info or not isinstance(gps_info, dict):
+            return None
+
         try:
-            from utils.image_processor import get_image_gps_coordinates
+            from PIL.ExifTags import GPSTAGS
+            from utils.image_processor import convert_gps_to_decimal
 
-            # Use existing GPS extraction logic for consistency
-            gps_info = exif_data.get('GPSInfo', {})
-            if gps_info:
-                # Convert GPS info to decimal coordinates
-                # This would use the existing GPS processing logic
-                return get_image_gps_coordinates(gps_info)
+            tags = {GPSTAGS.get(key, key): value for key, value in gps_info.items()}
 
-        except Exception:
-            pass
+            latitude = convert_gps_to_decimal(
+                tags.get('GPSLatitude'), tags.get('GPSLatitudeRef')
+            )
+            longitude = convert_gps_to_decimal(
+                tags.get('GPSLongitude'), tags.get('GPSLongitudeRef')
+            )
 
-        return None
+            if latitude is None or longitude is None:
+                return None
+
+            # A bad conversion is easier to spot here than three screens later
+            # on a map.
+            if not (-90 <= latitude <= 90 and -180 <= longitude <= 180):
+                log.warning(
+                    "Discarding out-of-range GPS coordinates: %s, %s", latitude, longitude
+                )
+                return None
+
+            return (latitude, longitude)
+
+        except Exception as e:
+            log.warning("GPS extraction failed: %s", e)
+            return None
 
     def _extract_color_palette(self, image_data: bytes) -> List[str]:
         """
         Common color extraction logic used by all templates.
 
-        Ensures identical color analysis across all import sources.
+        Fixed 2026-08-23. This passed raw bytes to extract_color_palette, which
+        expects a PIL Image and calls img.save(). bytes has no .save, so it
+        threw every time and the handler returned a hard-coded grey triple.
+        Every bulk-imported photo therefore carried the same three fake
+        colours, which look like real data in the gallery.
+
+        Returns [] when extraction genuinely fails, so absent data is absent
+        rather than disguised.
         """
+        log = getattr(self, 'logger', logger)
+
         try:
+            import io as _io
+            from PIL import Image
             from utils.image_processor import extract_color_palette
 
-            # Use existing color extraction for consistency
-            return extract_color_palette(image_data)
+            with Image.open(_io.BytesIO(image_data)) as image:
+                if image.mode != 'RGB':
+                    image = image.convert('RGB')
+                return extract_color_palette(image)
 
-        except Exception:
-            # Return default colors on error
-            return ["#CCCCCC", "#DDDDDD", "#EEEEEE"]
+        except Exception as e:
+            log.warning("Colour extraction failed: %s", e)
+            return []
 
 
 class TemplateConsistencyError(Exception):
